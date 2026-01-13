@@ -1,13 +1,11 @@
-package org.backend;
+package org.backend.billing;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BackEndApplication {
-
+public class BillingApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BackEndApplication.class, args);
+        SpringApplication.run(BillingApplication.class, args);
     }
-
 }
