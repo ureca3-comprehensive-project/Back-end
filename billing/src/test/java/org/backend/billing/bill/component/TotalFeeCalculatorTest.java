@@ -3,6 +3,7 @@ package org.backend.billing.bill.component;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import org.backend.billing.bill.dto.MidFeeCalculateRequest;
 import org.junit.jupiter.api.Test;
 
 class TotalFeeCalculatorTest {
@@ -22,7 +23,8 @@ class TotalFeeCalculatorTest {
         BigDecimal discount = new BigDecimal("62.6");
 
         //when
-        BigDecimal midResult = midFeeCalculator.midFeeCalculate(usageNow,baseUsage,unitPrice,basePrice);
+        BigDecimal midResult = midFeeCalculator.midFeeCalculate(
+                new MidFeeCalculateRequest(usageNow, baseUsage, unitPrice, basePrice));
         BigDecimal totalResult = totalFeeCalculator.totalFeeCalculate(usageNow,baseUsage,unitPrice,basePrice,midResult,vas,discount);
         BigDecimal myResult = new BigDecimal("1272.1");
 //      //then

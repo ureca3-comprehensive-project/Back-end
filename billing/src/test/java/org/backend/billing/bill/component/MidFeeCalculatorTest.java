@@ -3,6 +3,7 @@ package org.backend.billing.bill.component;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import org.backend.billing.bill.dto.MidFeeCalculateRequest;
 import org.junit.jupiter.api.Test;
 
 
@@ -15,13 +16,34 @@ class MidFeeCalculatorTest {
         MidFeeCalculator midFeeCalculator = new MidFeeCalculator();
 
         //given
-        String usageNow = "100.1";
-        String baseUsage = "50";
-        String unitPrice = "10";
-        Integer basePrice = 150;
+        MidFeeCalculateRequest midFeeCalculateRequest = new MidFeeCalculateRequest("100.1",
+                "50",
+                "10",
+                150);
+
         //when
-        BigDecimal result = midFeeCalculator.midFeeCalculate(usageNow,baseUsage,unitPrice,basePrice);
+        BigDecimal result = midFeeCalculator.midFeeCalculate(midFeeCalculateRequest);
         BigDecimal myResult = new BigDecimal(651);
+        //then
+        assertEquals(0,result.compareTo(myResult));
+
+    }
+
+
+    @Test
+    void 기본_제공량_이하로_쓰면_기본료만_청구됨(){
+
+        MidFeeCalculator midFeeCalculator = new MidFeeCalculator();
+
+        //given
+        MidFeeCalculateRequest midFeeCalculateRequest = new MidFeeCalculateRequest("100.1",
+                "1000",
+                "10",
+                150);
+
+        //when
+        BigDecimal result = midFeeCalculator.midFeeCalculate(midFeeCalculateRequest);
+        BigDecimal myResult = new BigDecimal("150");
         //then
         assertEquals(0,result.compareTo(myResult));
 
