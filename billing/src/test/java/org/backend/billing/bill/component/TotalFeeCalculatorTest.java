@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import org.backend.billing.bill.dto.MidFeeCalculateRequest;
+import org.backend.billing.bill.dto.TotalFeeCalculatorRequest;
 import org.junit.jupiter.api.Test;
 
 class TotalFeeCalculatorTest {
@@ -15,17 +16,22 @@ class TotalFeeCalculatorTest {
         MidFeeCalculator midFeeCalculator = new MidFeeCalculator();
 
         //given
-        String usageNow = "100.1";
-        String baseUsage = "50";
-        String unitPrice = "10";
-        Integer basePrice = 150;
-        BigDecimal vas = new BigDecimal("32.7");
-        BigDecimal discount = new BigDecimal("62.6");
+        MidFeeCalculateRequest midFeeCalculateRequest = new MidFeeCalculateRequest("100.1",
+                "50",
+                "10",
+                150);
+        BigDecimal midFee = midFeeCalculator.midFeeCalculate(midFeeCalculateRequest);
 
         //when
-        BigDecimal midResult = midFeeCalculator.midFeeCalculate(
-                new MidFeeCalculateRequest(usageNow, baseUsage, unitPrice, basePrice));
-        BigDecimal totalResult = totalFeeCalculator.totalFeeCalculate(usageNow,baseUsage,unitPrice,basePrice,midResult,vas,discount);
+        TotalFeeCalculatorRequest totalFeeCalculatorRequest = new TotalFeeCalculatorRequest("100.1",
+                "50",
+                "10",
+                150,
+                midFee,
+                new BigDecimal("32.7"),
+                new BigDecimal("62.6"));
+
+        BigDecimal totalResult = totalFeeCalculator.totalFeeCalculate(totalFeeCalculatorRequest);
         BigDecimal myResult = new BigDecimal("1272.1");
 //      //then
         assertEquals(0,totalResult.compareTo(myResult));
