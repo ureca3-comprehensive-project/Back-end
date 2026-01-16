@@ -1,10 +1,10 @@
-package org.backend.billing.bill.component;
+package org.backend.billingbatch.component;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
-import org.backend.billing.bill.dto.MidFeeCalculateRequest;
-import org.backend.billing.bill.dto.TotalFeeCalculatorRequest;
+import org.backend.billingbatch.dto.MidFeeCalculateRequest;
+import org.backend.billingbatch.dto.TotalFeeCalculatorRequest;
 import org.junit.jupiter.api.Test;
 
 class TotalFeeCalculatorTest {

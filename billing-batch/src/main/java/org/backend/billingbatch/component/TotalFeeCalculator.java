@@ -1,7 +1,8 @@
-package org.backend.billing.bill.component;
+package org.backend.billingbatch.component;
 
 import java.math.BigDecimal;
-import org.backend.billing.bill.dto.TotalFeeCalculatorRequest;
+
+import org.backend.billingbatch.dto.TotalFeeCalculatorRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +12,7 @@ public class TotalFeeCalculator {
 
         
 
-        BigDecimal result = midFeeCalculate(request.usage(),
+        BigDecimal result = totalFeeCalculate(request.usage(),
                 request.servicedAmount(),
                 request.unitPrice(),
                 request.basePrice())
@@ -23,11 +24,11 @@ public class TotalFeeCalculator {
 
     }
 
-    private static BigDecimal midFeeCalculate(BigDecimal usage,
+    private static BigDecimal totalFeeCalculate(BigDecimal usage,
                                               BigDecimal servicedAmount,
                                               BigDecimal unitPrice,
                                               BigDecimal baseFee) {
-        return ((usage.subtract(servicedAmount)).multiply(unitPrice)).add(baseFee);
+        return ((usage.subtract(servicedAmount).max(BigDecimal.ZERO)).multiply(unitPrice)).add(baseFee);
     }
 
 

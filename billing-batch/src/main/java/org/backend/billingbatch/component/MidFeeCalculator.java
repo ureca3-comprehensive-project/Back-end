@@ -1,7 +1,8 @@
-package org.backend.billing.bill.component;
+package org.backend.billingbatch.component;
 
 import java.math.BigDecimal;
-import org.backend.billing.bill.dto.MidFeeCalculateRequest;
+
+import org.backend.billingbatch.dto.MidFeeCalculateRequest;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -1,4 +1,4 @@
-package org.backend.billing.bill.dto;
+package org.backend.billingbatch.dto;
 
 import java.math.BigDecimal;
 
