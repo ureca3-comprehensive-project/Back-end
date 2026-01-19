@@ -20,6 +20,7 @@ public class EmailChannel implements MessageChannel {
 		// 실제 이메일 처리 로직
 		
 		try {
+			
 			Thread.sleep(1000);
 			
 			if(Math.random() >= failRate) { // 메시지 발송 성공(99%)

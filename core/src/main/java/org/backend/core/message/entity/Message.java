@@ -89,6 +89,7 @@ public class Message extends BaseEntity {
 	
 	public void markSent() {
 		this.status = MessageStatus.SENT;
+		this.sentAt = LocalDateTime.now();
 	}
 
 	public void dndHold(LocalDateTime availableAt) {

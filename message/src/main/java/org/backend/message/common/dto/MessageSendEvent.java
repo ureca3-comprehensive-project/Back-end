@@ -12,7 +12,7 @@ import lombok.Getter;
 public class MessageSendEvent {
 
 	private Long messageId;
-	private String dedeupKey;
+	private String dedupKey;
 	private ChannelType ChannelType;
 	private String correlationId;
 	

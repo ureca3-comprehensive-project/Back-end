@@ -26,7 +26,7 @@ public class MessageProducer {
 							, message.getId().toString()
 							, MessageSendEvent.builder()
 										     .messageId(message.getId())
-	 										 .dedeupKey(message.getDedupKey())
+	 										 .dedupKey(message.getDedupKey())
 											 .ChannelType(message.getChannelType())
 											 .correlationId(message.getCorrelationId())
 											 .build());
