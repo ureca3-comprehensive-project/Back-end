@@ -1,5 +1,9 @@
 package org.backend.message.common.dto;
 
+
+import org.backend.core.message.entity.Message;
+import org.backend.core.message.type.ChannelType;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,9 +11,9 @@ import lombok.Getter;
 @Getter
 public class MessageSendEvent {
 
-	private int messageId;
+	private Long messageId;
 	private String dedeupKey;
-	private String ChannelType;
+	private ChannelType ChannelType;
 	private String correlationId;
 	
 	
