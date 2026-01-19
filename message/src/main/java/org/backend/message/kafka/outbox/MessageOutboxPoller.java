@@ -33,6 +33,7 @@ public class MessageOutboxPoller {
 		List<Message> messages = messageRepository.findPendingMessages();
 		
 		if (messages.isEmpty()) {
+			log.info("[ MessageOutboxPoller ] - Pending Message Not Found");
             return;
         }
 		
