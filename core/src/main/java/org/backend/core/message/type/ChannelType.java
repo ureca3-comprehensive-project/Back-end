@@ -2,17 +2,16 @@ package org.backend.core.message.type;
 
 public enum ChannelType {
 	
-	EMAIL(1,"EMAIL"),
-    SMS(2,"SMS"),
-    PUSH(3,"PUSH"),
-    ETC(4,"ETC");
-	
-	private final int code;
-	private final String description;
-	
-	ChannelType(int code, String description) {
-        this.code = code;
-		this.description = description;
+	EMAIL,
+    SMS,
+    PUSH;
+
+    public ChannelType next() {
+        return switch (this) {
+            case EMAIL -> SMS;   // 이메일 실패 → SMS
+            case SMS   -> PUSH;  // SMS 실패 → 종료
+            case PUSH  -> null;  // PUSH 실패 → 종료
+        };
     }
 
 }
