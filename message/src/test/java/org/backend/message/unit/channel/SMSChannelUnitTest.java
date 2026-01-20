@@ -32,7 +32,7 @@ public class SMSChannelUnitTest {
             Message message = createMessage(1L, "test@example.com", "Test Subject");
 
             // when
-            boolean result = smsChannel.send(message);
+            boolean result = smsChannel.send(message).isSuccess();
 
             // then
             // 성공(99%) 또는 실패(1%) 중 하나여야 함
