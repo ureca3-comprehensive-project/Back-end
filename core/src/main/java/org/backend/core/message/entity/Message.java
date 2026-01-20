@@ -32,7 +32,7 @@ public class Message extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -76,5 +76,42 @@ public class Message extends BaseEntity {
 //	@ManyToOne(fetch = FetchType.LAZY)
 //    @Column(name = "template_id", nullable = false)
 //    private Template template;
+	
+	
+	/* Message Status 변경 메소드*/
+	public void markPending() {
+		this.status = MessageStatus.PENDING;
+	}
+
+	public void markSending() {
+		this.status = MessageStatus.SENDING;
+	}
+	
+	public void markSent() {
+		this.status = MessageStatus.SENT;
+		this.sentAt = LocalDateTime.now();
+	}
+
+	public void dndHold(LocalDateTime availableAt) {
+		this.availableAt = availableAt;
+		this.status = MessageStatus.DND_HOLD;
+	}
+	
+	public void markFail() {
+		this.status = MessageStatus.FAILED;
+	}
+	
+	
+	
+	
+	
+	/* 재시도 관련 메소드 */
+	public void increaseRetry() {
+		this.retryCount++;
+	}
+	
+	public void switchChannel(ChannelType channelType) {
+		this.channelType = channelType;
+	}
 
 }

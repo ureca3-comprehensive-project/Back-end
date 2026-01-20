@@ -1,6 +1,8 @@
 plugins {
     id 'org.springframework.boot' version '4.0.1' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
+    
+    id 'jacoco'
 }
 
 ext {
@@ -20,6 +22,8 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
+    
+    apply plugin: 'jacoco'
 
     // ✅ 이 블록 추가(핵심): Boot BOM을 모든 모듈에 적용
     dependencyManagement {
@@ -34,6 +38,7 @@ subprojects {
         }
     }
 
+
     configurations {
         compileOnly {
             extendsFrom annotationProcessor
@@ -45,8 +50,64 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
     }
+    
+    tasks.withType(JavaCompile) {
+	    options.encoding = 'UTF-8'
+	}
 
     tasks.named('test') {
         useJUnitPlatform()
     }
+    
+    
+    /* jacoco 설정 */
+    jacoco {
+        toolVersion = "0.8.11" // 최신 버전 권장
+    }
+    
+        
+    test {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport // 테스트 종료 후 리포트 생성
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+    
+    // 전체 모듈 리포트를 하나로 합치는 Task (Aggregation)
+	task jacocoRootReport(type: JacocoReport) {
+	    description = 'Generates an aggregate report from all subprojects'
+	    dependsOn = subprojects.jacocoTestReport
+	
+	    additionalSourceDirs.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+	    sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+	    classDirectories.from = files(subprojects.sourceSets.main.output)
+	    executionData.from = files(subprojects.jacocoTestReport.executionData)
+	
+	    reports {
+	        html.required = true
+	        xml.required = true
+	    }
+	}
+	
+	jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                "**/dto/**",
+                "**/entity/**",
+                "**/config/**",
+                "**/Q*", // QueryDSL
+                "**/*Application*", // 메인 클래스
+                "**/*Request*",
+                "**/*Response*"
+            ])
+        }))
+    }
+}
 }
