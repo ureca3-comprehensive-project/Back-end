@@ -10,26 +10,31 @@ public class TotalFeeCalculator {
 
     public BigDecimal totalFeeCalculate(TotalFeeCalculatorRequest request){
 
-        
-
-        BigDecimal result = totalFeeCalculate(request.usage(),
+        BigDecimal result = FeeCalculate(
+                request.usage(),
                 request.servicedAmount(),
-                request.unitPrice(),
-                request.basePrice())
-                .add(request.midFee())
-                .add(request.vas())
-                .subtract(request.discount());
-
+                request.unitPrice()
+        );
+//
         return result;
 
     }
 
-    private static BigDecimal totalFeeCalculate(BigDecimal usage,
+    private static BigDecimal FeeCalculate(BigDecimal usage,
                                               BigDecimal servicedAmount,
-                                              BigDecimal unitPrice,
-                                              BigDecimal baseFee) {
-        return ((usage.subtract(servicedAmount).max(BigDecimal.ZERO)).multiply(unitPrice)).add(baseFee);
+                                              BigDecimal unitPrice){
+
+
+
+        if (servicedAmount == null) servicedAmount = BigDecimal.ZERO;
+        if (usage == null) usage = BigDecimal.ZERO;
+        if (unitPrice == null) unitPrice = BigDecimal.ZERO;
+
+
+        return ((usage.subtract(servicedAmount).max(BigDecimal.ZERO)).multiply(unitPrice));
+    }
+
     }
 
 
-}
+
