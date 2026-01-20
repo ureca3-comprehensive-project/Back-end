@@ -3,6 +3,7 @@ package org.backend.core.message.entity;
 import java.time.LocalDateTime;
 
 import org.backend.core.common.entity.BaseEntity;
+import org.backend.core.invoice.entity.Invoice;
 import org.backend.core.message.type.ChannelType;
 import org.backend.core.message.type.MessageStatus;
 import org.backend.core.template.entity.Template;
@@ -58,21 +59,15 @@ public class Message extends BaseEntity {
 	private LocalDateTime availableAt;
 
 	@Column(nullable = true)
-	private LocalDateTime sentAt;
+	private LocalDateTime sentAt;	
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "template_id", nullable = false)
-	private Template template;
-	
-	
-//	@ManyToOne(fetch = FetchType.LAZY)
-//	@ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "invoice_id", nullable = false)
-//    private Invoice invoice;
-//
-//	@ManyToOne(fetch = FetchType.LAZY)
-//    @Column(name = "template_id", nullable = false)
-//    private Template template;
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private Invoice invoice;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id", nullable = false)
+    private Template template;
 	
 	
 	/* Message Status 변경 메소드*/
