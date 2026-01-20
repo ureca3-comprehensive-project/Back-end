@@ -14,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -41,6 +42,16 @@ public class MessageAttempt extends BaseEntity {
 	@Column(nullable = false)
 	private MessageAttemptStatus status;
 	
+	@Lob
+    private String requestPayload;
+	
+	@Column(nullable = true, length = 80)
+	private String providerMessageId;
+
+	@Column(nullable = true)
+	private Integer httpStatus;
+	
+	
 	@Column(nullable = true, length = 50)
 	private String failCode;
 	
@@ -52,6 +63,34 @@ public class MessageAttempt extends BaseEntity {
 	
 	@Column(name = "responded_at")
 	private LocalDateTime respondedAt;
+	
+	public static MessageAttempt attempting(Message message, int attemptNo, String payload ) {
+        
+		MessageAttempt a = new MessageAttempt();
+        
+		a.message = message;
+        a.attemptNo = attemptNo;
+        a.status = MessageAttemptStatus.ATTEMPTING;
+        a.requestPayload = payload;
+        a.requestedAt = LocalDateTime.now();
+        
+        return a;
+    }
+
+    public void success(String providerMessageId, int httpStatus) {
+        this.status = MessageAttemptStatus.SUCCESS;
+        this.providerMessageId = providerMessageId;
+        this.httpStatus = httpStatus;
+        this.respondedAt = LocalDateTime.now();
+    }
+
+    public void fail(String failCode, String failReason, Integer httpStatus) {
+        this.status = MessageAttemptStatus.FAIL;
+        this.failCode = failCode;
+        this.failReason = failReason;
+        this.httpStatus = httpStatus;
+        this.respondedAt = LocalDateTime.now();
+    }
 	
 	
 	

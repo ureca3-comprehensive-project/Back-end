@@ -53,9 +53,6 @@ public class Message extends BaseEntity {
 
 	@Column(nullable = false)
 	private Integer maxRetry = 3;
-	
-	@Column(nullable = true)
-	private LocalDateTime scheduledAt;
 
 	@Column(nullable = true)
 	private LocalDateTime availableAt;
