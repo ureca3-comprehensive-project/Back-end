@@ -1,5 +1,7 @@
 package org.backend.domain.vas.entity;
 
+import java.math.BigDecimal;
+
 import org.backend.domain.common.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -24,11 +26,12 @@ public class Vas extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "vas_id")
     private Integer id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "monthly_price", nullable = false)
-    private Integer monthlyPrice;
+    @Column(name = "monthly_price", nullable = false, precision = 20, scale = 2)
+    private BigDecimal monthlyPrice;
 }

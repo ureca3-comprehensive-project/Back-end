@@ -16,6 +16,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -32,46 +33,49 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "message",
         indexes = {
+        		@Index(name = "idx_message_invoice_id", columnList = "invoice_id")
         })
 public class Message extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "message_id")
 	private Long id;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "invoice_id", nullable = false)
+	private Invoice invoice;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "template_id", nullable = false)
+	private Template template;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@Column(nullable = false, name = "channel_type")
 	private ChannelType channelType;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@Column(nullable = false, name = "status")
 	private MessageStatus status;
 
-	@Column(nullable = false, unique = true, length = 255)
+	@Column(nullable = false, unique = true, length = 255, name = "dedup_key")
 	private String dedupKey;
 
-	@Column(nullable = false, unique = false, length = 255)
+	@Column(nullable = false, unique = false, length = 255 , name = "correlation_id")
 	private String correlationId;
 	
-	@Column(nullable = false)
+	@Column(nullable = false , name = "retry_count")
 	private Integer retryCount = 0;
 
-	@Column(nullable = false)
+	@Column(nullable = false , name = "max_retry")
 	private Integer maxRetry = 3;
 
-	@Column(nullable = true)
+	@Column(nullable = true , name = "available_at")
 	private LocalDateTime availableAt;
 
-	@Column(nullable = true)
+	@Column(nullable = true, name = "sent_at")
 	private LocalDateTime sentAt;	
 	
-	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id", nullable = false)
-    private Invoice invoice;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id", nullable = false)
-    private Template template;
 	
 	
 	/* Message Status 변경 메소드*/
@@ -96,9 +100,6 @@ public class Message extends BaseEntity {
 	public void markFail() {
 		this.status = MessageStatus.FAILED;
 	}
-	
-	
-	
 	
 	
 	/* 재시도 관련 메소드 */

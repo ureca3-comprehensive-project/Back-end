@@ -31,6 +31,7 @@ public class LineHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "line_history_id")
     private Long id;
 
     @Column(name = "user_id", nullable = false)
