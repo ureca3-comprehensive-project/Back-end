@@ -1,4 +1,4 @@
-package org.backend.core.common.util;
+package org.backend.core.util.common;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package org.backend.core.util.config;
+package org.backend.core.config;
 
 import java.util.Base64;
 

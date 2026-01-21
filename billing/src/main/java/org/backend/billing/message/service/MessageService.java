@@ -20,7 +20,6 @@ import org.backend.billing.message.service.InMemoryStores.Attempt;
 import org.backend.billing.message.service.InMemoryStores.Channel;
 import org.backend.billing.message.service.InMemoryStores.Message;
 import org.backend.billing.message.service.InMemoryStores.MessageStatus;
-import org.backend.core.template.entity.Template;
 import org.springframework.stereotype.Service;
 
 @Service

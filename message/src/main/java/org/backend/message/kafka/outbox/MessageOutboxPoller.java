@@ -3,10 +3,9 @@ package org.backend.message.kafka.outbox;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.repository.MessageRepository;
-import org.backend.core.message.type.ChannelType;
-import org.backend.core.message.type.MessageStatus;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.repository.MessageRepository;
+import org.backend.domain.message.type.MessageStatus;
 import org.backend.message.kafka.producer.MessageProducer;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;

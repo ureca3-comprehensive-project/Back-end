@@ -2,10 +2,9 @@ package org.backend.message.unit.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.impl.EmailChannel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

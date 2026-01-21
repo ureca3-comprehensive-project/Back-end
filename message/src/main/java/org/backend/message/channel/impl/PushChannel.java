@@ -1,7 +1,7 @@
 package org.backend.message.channel.impl;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.MessageChannel;
 import org.backend.message.common.dto.ChannelSendResult;
 import org.springframework.stereotype.Component;

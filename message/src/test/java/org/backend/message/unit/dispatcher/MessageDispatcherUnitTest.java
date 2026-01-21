@@ -2,22 +2,23 @@ package org.backend.message.unit.dispatcher;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.entity.MessageAttempt;
-import org.backend.core.message.repository.MessageAttemptRepository;
-import org.backend.core.message.repository.MessageRepository;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.entity.MessageAttempt;
+import org.backend.domain.message.repository.MessageAttemptRepository;
+import org.backend.domain.message.repository.MessageRepository;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.MessageChannel;
 import org.backend.message.common.dto.ChannelSendResult;
 import org.backend.message.dispatcher.MessageDispatcher;
