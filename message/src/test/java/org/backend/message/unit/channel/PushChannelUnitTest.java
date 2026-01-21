@@ -3,8 +3,8 @@ package org.backend.message.unit.channel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.impl.PushChannel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +31,7 @@ public class PushChannelUnitTest {
             Message message = createMessage(1L, "test@example.com", "Test Subject");
 
             // when
-            boolean result = pushChannel.send(message);
+            boolean result = pushChannel.send(message).isSuccess();
 
             // then
             // 성공(99%) 또는 실패(1%) 중 하나여야 함

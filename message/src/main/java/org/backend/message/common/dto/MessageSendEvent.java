@@ -1,8 +1,7 @@
 package org.backend.message.common.dto;
 
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.type.ChannelType;
 
 import lombok.Builder;
 import lombok.Getter;

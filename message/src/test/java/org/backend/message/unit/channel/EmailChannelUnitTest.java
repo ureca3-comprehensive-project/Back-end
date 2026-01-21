@@ -2,10 +2,9 @@ package org.backend.message.unit.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.impl.EmailChannel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +32,7 @@ public class EmailChannelUnitTest {
             Message message = createMessage(1L, "test@example.com", "Test Subject");
 
             // when
-            boolean result = emailChannel.send(message);
+            boolean result = emailChannel.send(message).isSuccess();
 
             // then
             // 성공(99%) 또는 실패(1%) 중 하나여야 함
@@ -64,7 +63,7 @@ public class EmailChannelUnitTest {
             Message message = createMessage(1L, "test@example.com", "Test Subject");
 
             // when
-            boolean result = emailChannel.send(message);
+            boolean result = emailChannel.send(message).isSuccess();
 
             // then
             // 개별 테스트는 성공 또는 실패
@@ -81,7 +80,7 @@ public class EmailChannelUnitTest {
 
             // when
             for (int i = 0; i < totalAttempts; i++) {
-                if (emailChannel.send(message)) {
+                if (emailChannel.send(message).isSuccess()) {
                     successCount++;
                 }
             }
@@ -101,7 +100,7 @@ public class EmailChannelUnitTest {
 
             // when - 1000번 시도하면 최소 1번은 실패할 것으로 예상 (1% 실패율)
             for (int i = 0; i < 1000; i++) {
-                if (!emailChannel.send(message)) {
+                if (!emailChannel.send(message).isSuccess()) {
                     hasFailure = true;
                     break;
                 }
@@ -119,7 +118,7 @@ public class EmailChannelUnitTest {
             Thread.currentThread().interrupt();
 
             // when
-            boolean result = emailChannel.send(message);
+            boolean result = emailChannel.send(message).isSuccess();
 
             // then
             assertThat(result).isFalse();

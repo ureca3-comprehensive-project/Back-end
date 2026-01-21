@@ -3,9 +3,9 @@ package org.backend.message.policy;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.user.entity.BanTime;
-import org.backend.core.user.repository.BanTimeRepository;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.user.entity.BanTime;
+import org.backend.domain.user.repository.BanTimeRepository;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;

@@ -7,8 +7,8 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import org.backend.core.message.repository.MessageRepository;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.repository.MessageRepository;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.common.dto.MessageSendEvent;
 import org.backend.message.dispatcher.MessageDispatcher;
 import org.backend.message.kafka.consumer.MessageSendConsumer;
