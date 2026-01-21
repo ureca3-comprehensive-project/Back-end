@@ -1,10 +1,13 @@
 package org.backend.message.kafka.outbox;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.repository.MessageRepository;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.repository.MessageRepository;
+import org.backend.domain.message.type.MessageStatus;
 import org.backend.message.kafka.producer.MessageProducer;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,11 +29,13 @@ public class MessageOutboxPoller {
 	 * 
 	 * 
 	 */
-	@Scheduled(fixedDelay = 3000)
+	@Scheduled(fixedDelay = 5000)
 	@Transactional
 	public void poll() {
 		
-		List<Message> messages = messageRepository.findPendingMessages();
+		List<Message> messages = messageRepository.findPendingMessages(List.of(MessageStatus.PENDING, MessageStatus.DND_HOLD),
+	            														LocalDateTime.now(),
+	            														PageRequest.of(0, 100));
 		
 		if (messages.isEmpty()) {
 			log.info("[ MessageOutboxPoller ] - Pending Message Not Found");
@@ -43,6 +48,7 @@ public class MessageOutboxPoller {
 			
 			try {
                 messageProducer.sendMessage(message);
+                message.markSending();
                 log.debug("[ MessageOutboxPoller ] - Sent message {} to Kafka", message.getId());
             } catch (Exception e) {
                 log.error("[ MessageOutboxPoller ] - Failed to send message {} to Kafka", message.getId(), e);

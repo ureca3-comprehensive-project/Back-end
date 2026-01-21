@@ -1,13 +1,12 @@
 package org.backend.message.kafka.consumer;
 
-import org.backend.core.message.repository.MessageRepository;
+import org.backend.domain.message.repository.MessageRepository;
 import org.backend.message.common.dto.MessageSendEvent;
 import org.backend.message.dispatcher.MessageDispatcher;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import io.lettuce.core.event.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

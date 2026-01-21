@@ -1,6 +1,6 @@
 package org.backend.message.policy;
 
-import org.backend.core.message.entity.Message;
+import org.backend.domain.message.entity.Message;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
