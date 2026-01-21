@@ -47,8 +47,8 @@ public class MessageOutboxPoller {
 		for(Message message : messages) {
 			
 			try {
+				message.markSending();
                 messageProducer.sendMessage(message);
-                message.markSending();
                 log.debug("[ MessageOutboxPoller ] - Sent message {} to Kafka", message.getId());
             } catch (Exception e) {
                 log.error("[ MessageOutboxPoller ] - Failed to send message {} to Kafka", message.getId(), e);

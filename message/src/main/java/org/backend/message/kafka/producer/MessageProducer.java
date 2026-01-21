@@ -19,7 +19,7 @@ public class MessageProducer {
 	
 	public void sendMessage(Message message) {
 		
-		log.info("[ MessageProducer ] - Sending message event for ID : {}", message.getId());
+		log.info("[ MessageProducer ] - Sending message event for ID : {}", message.getCorrelationId());
 		
 		// Payload(MessageSendEc
 		kafkaTemplate.send(TOPIC
@@ -31,7 +31,7 @@ public class MessageProducer {
 											 .correlationId(message.getCorrelationId())
 											 .build());
 
-		log.info("[ MessageProducer ] - Sent message event for ID : {}", message.getId());
+		log.info("[ MessageProducer ] - Sent message event for ID : {}", message.getCorrelationId());
 		
 	}
 	
