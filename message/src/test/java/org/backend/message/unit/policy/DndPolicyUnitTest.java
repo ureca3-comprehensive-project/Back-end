@@ -133,7 +133,8 @@ public class DndPolicyUnitTest {
         void returnCurrentTimeWhenNotDnd() {
             // given
             Message message = createMessage(1L);
-            BanTime banTime = createBanTime(LocalTime.of(22, 0), LocalTime.of(8, 0));
+            BanTime banTime = createBanTime(LocalTime.now().minusHours(2), LocalTime.now().minusHours(1));
+            
             
             given(banTimeRepository.findBanTimeByMessageId(1L))
                 .willReturn(Optional.of(banTime));

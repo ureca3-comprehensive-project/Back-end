@@ -9,9 +9,11 @@ import org.backend.domain.user.repository.BanTimeRepository;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DndPolicy{
 	
 	private final BanTimeRepository banTimeRepository;
@@ -41,15 +43,15 @@ public class DndPolicy{
         LocalTime endTime = dnd.getEndTime();
     	
     	if (!isDndNow(message)) {
-            return now;
+    	    return now;
         }
     	
     	LocalDateTime nextTime = now.with(endTime);
     	
-    	if (nextTime.isBefore(now)) {
+    	if (nextTime.isAfter(now)) {
             nextTime = nextTime.plusDays(1);
         }
-
+    	
         return nextTime;
     }
 
