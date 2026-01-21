@@ -8,10 +8,11 @@ import org.springframework.kafka.annotation.EnableKafka;
 
 @SpringBootApplication(scanBasePackages = {
 	    "org.backend.message",
-	    "org.backend.core"
+	    "org.backend.core",
+	    "org.backend.domain"
 	})
-@EntityScan(basePackages = "org.backend.core")
-@EnableJpaRepositories(basePackages = "org.backend.core")
+@EntityScan(basePackages = "org.backend.domain")
+@EnableJpaRepositories(basePackages = "org.backend.domain")
 @EnableKafka
 public class MessageApplication {
     public static void main(String[] args) {
