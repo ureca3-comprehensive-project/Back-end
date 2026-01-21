@@ -1,6 +1,7 @@
 package org.backend.billingbatch.scheduler;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -26,9 +27,10 @@ public class BillingJobExecutor extends QuartzJobBean {
         try{
             log.info("BillingJob 실행");
 
-            String today = LocalDate.now().toString();
 
-            JobParameters jobParameters = new JobParametersBuilder().addString("date",today)
+            String billingMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+
+            JobParameters jobParameters = new JobParametersBuilder().addString("date",billingMonth)
                     .toJobParameters();
 
             jobOperator.start(billingJob, jobParameters);
