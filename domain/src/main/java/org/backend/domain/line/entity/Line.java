@@ -3,7 +3,7 @@ package org.backend.domain.line.entity;
 import java.time.LocalDateTime;
 
 import org.backend.domain.common.entity.BaseEntity;
-import org.backend.domain.line.repository.LineStatus;
+import org.backend.domain.line.type.LineStatus;
 import org.backend.domain.user.entity.BanTime;
 import org.backend.domain.user.entity.User;
 
@@ -65,5 +65,5 @@ public class Line extends BaseEntity {
     private LocalDateTime endDate;
 
     @Column(name = "phone", nullable = false, unique = true)
-    private String phoneNum; // 암호화는 모듈에서 처리
+    private String phone; // 암호화는 모듈에서 처리
 }

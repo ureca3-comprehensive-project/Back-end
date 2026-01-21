@@ -64,9 +64,11 @@ public class Message extends BaseEntity {
 	@Column(nullable = false, unique = false, length = 255 , name = "correlation_id")
 	private String correlationId;
 	
+	@Builder.Default
 	@Column(nullable = false , name = "retry_count")
 	private Integer retryCount = 0;
 
+	@Builder.Default
 	@Column(nullable = false , name = "max_retry")
 	private Integer maxRetry = 3;
 

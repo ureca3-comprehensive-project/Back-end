@@ -2,7 +2,7 @@ package org.backend.domain.line.entity;
 
 import java.time.LocalDateTime;
 
-import org.backend.domain.line.repository.LineStatus;
+import org.backend.domain.line.type.LineStatus;
 import org.backend.domain.user.entity.User;
 import org.hibernate.annotations.DialectOverride.GeneratedColumn;
 

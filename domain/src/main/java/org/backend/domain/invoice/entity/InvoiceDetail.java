@@ -44,7 +44,7 @@ public class InvoiceDetail {
     @Column(name = "status")
     private String status;
 
-    @Column(name = "status", precision = 20, scale = 2, nullable = false)
+    @Column(name = "amount", precision = 20, scale = 2, nullable = false)
     private BigDecimal amount;
 
 }
