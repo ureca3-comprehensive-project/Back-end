@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.user.entity.BanTime;
-import org.backend.core.user.repository.BanTimeRepository;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.user.entity.BanTime;
+import org.backend.domain.user.repository.BanTimeRepository;
 import org.backend.message.policy.DndPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

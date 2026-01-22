@@ -9,12 +9,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.BDDMockito.*;
 
 import java.util.concurrent.CompletableFuture;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.common.dto.MessageSendEvent;
 import org.backend.message.kafka.producer.MessageProducer;
 import org.junit.jupiter.api.DisplayName;

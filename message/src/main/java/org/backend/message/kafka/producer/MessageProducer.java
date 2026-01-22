@@ -1,6 +1,6 @@
 package org.backend.message.kafka.producer;
 
-import org.backend.core.message.entity.Message;
+import org.backend.domain.message.entity.Message;
 import org.backend.message.common.dto.MessageSendEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class MessageProducer {
 	
 	public void sendMessage(Message message) {
 		
-		log.info("[ MessageProducer ] - Sending message event for ID : {}", message.getId());
+		log.info("[ MessageProducer ] - Sending message event for ID : {}", message.getCorrelationId());
 		
 		// Payload(MessageSendEc
 		kafkaTemplate.send(TOPIC
@@ -31,7 +31,7 @@ public class MessageProducer {
 											 .correlationId(message.getCorrelationId())
 											 .build());
 
-		log.info("[ MessageProducer ] - Sent message event for ID : {}", message.getId());
+		log.info("[ MessageProducer ] - Sent message event for ID : {}", message.getCorrelationId());
 		
 	}
 	

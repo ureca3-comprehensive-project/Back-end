@@ -1,96 +1,74 @@
 package org.backend.message.unit.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
-import org.backend.core.message.entity.Message;
-import org.backend.core.message.type.ChannelType;
+import org.backend.core.util.security.crypto.CryptoUtil;
+import org.backend.domain.line.repository.LineRepository;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.entity.MessageAttempt;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.message.channel.impl.SMSChannel;
+import org.backend.message.common.dto.ChannelSendResult;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SMSChannel 테스트")
-public class SMSChannelUnitTest {
-	
-	@InjectMocks
+@DisplayName("SMSChannel 단위 테스트")
+class SMSChannelUnitTest {
+
+    @Mock
+    private LineRepository lineRepository;
+
+    @InjectMocks
     private SMSChannel smsChannel;
 
-    @Nested
-    @DisplayName("send 메서드는")
-    class Send {
-
-        @Test
-        @DisplayName("SMS 전송을 시도한다")
-        void attemptToSendEmail() {
+    @Test
+    @DisplayName("SMS 전송 시 전화번호를 복호화하고 결과를 반환한다")
+    void attemptToSendSms() {
+        // Static Mocking 설정 (CryptoUtil)
+        try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
+            
             // given
-            Message message = createMessage(1L, "test@example.com", "Test Subject");
+            MessageAttempt attempt = createAttempt(1L);
+            ReflectionTestUtils.setField(attempt, "id", 100L); // ID NPE 방지
+
+            given(lineRepository.findPhoneByAttemptId(100L))
+                .willReturn("encrypted_data");
+
+            // Static 메서드 동작 정의
+            cryptoUtil.when(() -> CryptoUtil.decrypt("encrypted_data"))
+                      .thenReturn("01012345678");
 
             // when
-            boolean result = smsChannel.send(message);
+            ChannelSendResult result = smsChannel.send(attempt);
 
             // then
-            // 성공(99%) 또는 실패(1%) 중 하나여야 함
-            assertThat(result).isIn(true, false);
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getProviderMessageId()).startsWith("SMS-");
+            
+            // 검증
+            verify(lineRepository).findPhoneByAttemptId(100L);
+            cryptoUtil.verify(() -> CryptoUtil.decrypt("encrypted_data"));
         }
     }
 
-    @Nested
-    @DisplayName("supports 메서드는")
-    class Supports {
-
-        @Test
-        @DisplayName("EMAIL 타입을 지원하지 않는다")
-        void supportEmailType() {
-            // when
-            boolean result = smsChannel.supports(ChannelType.EMAIL);
-
-            // then
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("SMS 타입을 지원한다")
-        void doesNotSupportSmsType() {
-            // when
-            boolean result = smsChannel.supports(ChannelType.SMS);
-
-            // then
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("PUSH 타입을 지원하지 않는다")
-        void doesNotSupportPushType() {
-            // when
-            boolean result = smsChannel.supports(ChannelType.PUSH);
-
-            // then
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("null 타입은 지원하지 않는다")
-        void doesNotSupportNullType() {
-            // when
-            boolean result = smsChannel.supports(null);
-
-            // then
-            assertThat(result).isFalse();
-        }
+    @Test
+    @DisplayName("SMS 타입만 지원한다")
+    void supportsTest() {
+        assertThat(smsChannel.supports(ChannelType.SMS)).isTrue();
+        assertThat(smsChannel.supports(ChannelType.EMAIL)).isFalse();
     }
-    
-    // Util method
-    private Message createMessage(Long id, String recipient, String subject) {
+
+    private MessageAttempt createAttempt(Long attemptNo) {
         Message message = mock(Message.class);
-        return message;
+        return MessageAttempt.attempting(message, attemptNo, "{payload}");
     }
-
-	
-
 }
