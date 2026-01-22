@@ -2,6 +2,7 @@ package org.backend.billingbatch.job;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.backend.billingbatch.dto.InvoiceDto;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
 import org.backend.domain.line.entity.Line;
@@ -64,11 +65,13 @@ public class InvoiceJobConfig {
     public Step createInvoiceStep(JobRepository jobRepository,
                                   PlatformTransactionManager transactionManager) throws Exception {
         return new StepBuilder("createInvoiceStep", jobRepository)
-                .<BillingHistory, Invoice>chunk(CHUNK_SIZE, transactionManager)
+//                .<BillingHistory, Invoice>chunk(CHUNK_SIZE, transactionManager)
+                .<BillingHistory, InvoiceDto>chunk(CHUNK_SIZE, transactionManager) // invoiceDto 사용 버전
 //                .reader(jdbcBillingHistoryReader(null))
                 .reader(targetDateBillingReader(null, null))
                 .processor(invoiceProcessor)
-                .writer(jdbcInvoiceWriter())
+//                .writer(jdbcInvoiceWriter())
+                .writer(compositeJdbcWriter()) // invoiceDto 사용 버전
 //                .writer(compositeInvoiceWriter())
                 .taskExecutor(taskExecutor())
                 .listener(chunkListener())
@@ -139,12 +142,17 @@ public class InvoiceJobConfig {
         // 전부 정산되 가격이 amount로 올 경우
         provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
 
-        provider.setFromClause("FROM BillingHistory b " +
-                "INNER JOIN Line l ON b.line_id = l.line_id " +
-                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
+//        provider.setFromClause("FROM BillingHistory b " +
+//                "INNER JOIN Line l ON b.line_id = l.line_id " +
+//                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
+//
+//        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
+//        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
 
-        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
-        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
+        // 조인 연산에서 시간을 잡아먹는지, DB 서버 설정이나 I/O 병목현상인지 확인을 위해 작성 => 1397.591 초(23분), 893.96 초당 처리량
+        provider.setFromClause("FROM BillingHistory b");
+        provider.setWhereClause("WHERE b.billing_month = :billingMonth");
+
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
 
         return provider.getObject();
@@ -188,11 +196,43 @@ public class InvoiceJobConfig {
                 .build();
     }
 
+    // invoiceDto 사용 버전 =====
+    @Bean
+    public CompositeItemWriter<InvoiceDto> compositeJdbcWriter() {
+        return new CompositeItemWriterBuilder<InvoiceDto>()
+                .delegates(invoiceInsertWriter(), invoiceDetailInsertWriter())
+                .build();
+    }
+
+    @Bean
+    public JdbcBatchItemWriter<InvoiceDto> invoiceInsertWriter() {
+        return new JdbcBatchItemWriterBuilder<InvoiceDto>()
+                .dataSource(dataSource)
+                .sql("INSERT INTO Invoice (invoice_id, line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
+                        "VALUES (:invoiceId, :lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, NOW())")
+                .beanMapped()
+                .build();
+    }
+
+    @Bean
+    public JdbcBatchItemWriter<InvoiceDto> invoiceDetailInsertWriter() {
+        return new JdbcBatchItemWriterBuilder<InvoiceDto>()
+                .dataSource(dataSource)
+                .sql("INSERT INTO InvoiceDetail (invoice_detail_id, invoice_id, billing_type, amount, status) " +
+                        "VALUES (:detailId, :invoiceId, :billingType, :detailAmount, :detailStatus)")
+                .beanMapped()
+                .build();
+    }
+    // ==========
+
     // DB 저장 + Kafka 전송을 동시에 수행하는 Writer
     @Bean
-    public CompositeItemWriter<Invoice> compositeInvoiceWriter() {
-        return new CompositeItemWriterBuilder<Invoice>()
-                .delegates(jdbcInvoiceWriter(), invoiceKafkaSender) // 순서대로 실행(db 삽입 후 kafka 전송)
+//    public CompositeItemWriter<Invoice> compositeInvoiceWriter() {
+//        return new CompositeItemWriterBuilder<Invoice>()
+    public CompositeItemWriter<InvoiceDto> compositeInvoiceWriter() {
+        return new CompositeItemWriterBuilder<InvoiceDto>()
+//                .delegates(jdbcInvoiceWriter(), invoiceKafkaSender) // 순서대로 실행(db 삽입 후 kafka 전송)
+                .delegates(compositeJdbcWriter(), invoiceKafkaSender) // invoiceDto 사용 버전
                 .build();
     }
 
@@ -203,6 +243,7 @@ public class InvoiceJobConfig {
         executor.setCorePoolSize(8); // 본인 PC CPU 코어 수에 맞게 설정, yml도 수정 필요
         executor.setMaxPoolSize(16);
         executor.setQueueCapacity(500); // 대기 큐
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy()); // 큐가 꽉 차면 호출한 스레드가 직접 처리하게 하여 데이터 유실 방지
         executor.initialize();
         return executor;
     }
@@ -232,11 +273,20 @@ public class InvoiceJobConfig {
     }
 
     // 한 청크가 DB에 써진 후 영속성 컨텍스트를 완전히 비워 메모리 병목을 방지
+//    @Bean
+//    public ItemWriteListener<Invoice> writeListener() {
+//        return new ItemWriteListener<Invoice>() {
+//            @Override
+//            public void afterWrite(Chunk<? extends Invoice> items) {
+//                entityManager.clear();
+//            }
+//        };
+//    }
     @Bean
-    public ItemWriteListener<Invoice> writeListener() {
-        return new ItemWriteListener<Invoice>() {
+    public ItemWriteListener<InvoiceDto> writeListener() { // 👈 Invoice -> InvoiceDto
+        return new ItemWriteListener<InvoiceDto>() {
             @Override
-            public void afterWrite(Chunk<? extends Invoice> items) {
+            public void afterWrite(Chunk<? extends InvoiceDto> items) {
                 entityManager.clear();
             }
         };

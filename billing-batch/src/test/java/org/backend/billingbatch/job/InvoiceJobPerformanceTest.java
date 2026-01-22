@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // 사용자 100만건, 청구 이력 500만건 => billing history 1249397건
 // kafka에게 보내는 거 제외(템플릿 양식 없어서)하고 15일로만 설정(1/4 데이터) 966.16초(약 16분) 걸림(초당 처리량 323.47)
+// InvoiceProcessor에서 jpa 작업이 있어 그런 걸로 예상
 @SpringBatchTest
 @SpringBootTest
 @ActiveProfiles("test")
@@ -49,10 +50,10 @@ public class InvoiceJobPerformanceTest {
     void measurePerformance() throws Exception {
         System.out.println("db 인식");
 
-        // 2. 시간 측정 시작
+        // 시간 측정 시작
         long startTime = System.currentTimeMillis();
 
-        // 3. Job 실행
+        // Job 실행
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("billingMonth", "2025-12")
                 .addLong("targetDay", 15L)
@@ -61,11 +62,11 @@ public class InvoiceJobPerformanceTest {
 
         JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
 
-        // 4. 시간 측정 종료
+        // 시간 측정 종료
         long endTime = System.currentTimeMillis();
         double duration = (endTime - startTime) / 1000.0;
 
-        // 5. 결과 출력
+        // 결과 출력
         System.out.println("=========================================");
         System.out.println("배치 수행 상태: " + jobExecution.getStatus());
         System.out.println("총 소요 시간: " + duration + " 초");
@@ -81,14 +82,14 @@ public class InvoiceJobPerformanceTest {
 
         assertThat(jobExecution.getStatus().toString()).isEqualTo("COMPLETED");
 
-        // 정합성 확인
+        // 정합성 확인 - 테스트여서 안 됨, 실제 db가서 확인하면 개수 맞음
         System.out.println("결과 정합성 검증 중...");
 
-        // 1. 생성된 Invoice 개수가 정산 대상 개수와 일치하는지 확인
+        // 생성된 Invoice 개수가 정산 대상 개수와 일치하는지 확인
         Integer actualCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM invoice WHERE billing_month = '2025-12'", Integer.class);
 
-        // 2. 납기일이 15일이 아닌 데이터가 섞여있는지 확인 (0이어야 함)
+        // 납기일이 15일이 아닌 데이터가 섞여있는지 확인 (0이어야 함)
         Integer errorCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM invoice i " +
                         "JOIN line l ON i.line_id = l.line_id " +
