@@ -14,7 +14,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'org.springframework.batch:spring-batch-core'
     // kafka로 invoice 전송 테스트
-    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.kafka:spring-kafka' // del
     implementation 'org.springframework.boot:spring-boot-starter-kafka' // spring-boot-kafka => KafkaAutoConfiguration 사용
     runtimeOnly 'com.mysql:mysql-connector-j'
 

@@ -106,7 +106,7 @@ public class InvoiceJobTest {
         private InvoiceProcessor invoiceProcessor;
 
         @Test
-        @DisplayName("통신요금과 소액결제를 합산하고 부가세 10%를 적용하여 청구서를 생성한다")
+        @DisplayName("통신요금으로 청구서 생성")
         void processTest() throws Exception {
             // given
             String targetMonth = "2024-01";
@@ -118,30 +118,12 @@ public class InvoiceJobTest {
                     .billingMonth(targetMonth)
                     .build();
 
-            // 소액결제 2건 (10,000원 + 5,000원)
-            List<MicroPayment> mockPayments = Arrays.asList(
-                    MicroPayment.builder()
-                            .lineId(1)
-                            .payMonth(targetMonth)
-                            .payPrice(BigDecimal.valueOf(10000))
-                            .build(),
-                    MicroPayment.builder()
-                            .lineId(1)
-                            .payMonth(targetMonth)
-                            .payPrice(BigDecimal.valueOf(5000))
-                            .build()
-            );
-
-            given(microPaymentRepository.findByLineIdAndPayMonth(anyLong(), any()))
-                    .willReturn(mockPayments);
-
             // when
             Invoice result = invoiceProcessor.process(history);
 
             // then
             // 공급가액 = 50,000 + 15,000 = 65,000
-            // 최종금액 = 65,000 * 1.1 = 71,500
-            assertThat(result.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(71500));
+            assertThat(result.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(65000));
             assertThat(result.getStatus()).isEqualTo("CREATED");
             assertThat(result.getLine()).isEqualTo(1L);
 

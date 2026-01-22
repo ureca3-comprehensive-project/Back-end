@@ -1,15 +1,21 @@
 package org.backend.billingbatch.job;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
+import org.backend.domain.line.entity.Line;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.listener.ChunkListener;
+import org.springframework.batch.core.listener.ItemWriteListener;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.database.*;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcPagingItemReaderBuilder;
@@ -19,10 +25,15 @@ import org.springframework.batch.infrastructure.item.support.builder.CompositeIt
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +46,7 @@ public class InvoiceJobConfig {
     private final InvoiceProcessor invoiceProcessor;
     private final InvoiceKafkaSender invoiceKafkaSender;
 
+    private final EntityManager entityManager;
     // 속도 테스트로 변경 가능
     private static final int CHUNK_SIZE = 1000;
 
@@ -56,8 +68,11 @@ public class InvoiceJobConfig {
 //                .reader(jdbcBillingHistoryReader(null))
                 .reader(targetDateBillingReader(null, null))
                 .processor(invoiceProcessor)
-//                .writer(jdbcInvoiceWriter())
-                .writer(compositeInvoiceWriter())
+                .writer(jdbcInvoiceWriter())
+//                .writer(compositeInvoiceWriter())
+                .taskExecutor(taskExecutor())
+                .listener(chunkListener())
+                .listener(writeListener())
                 .build();
     }
 
@@ -75,8 +90,25 @@ public class InvoiceJobConfig {
         return new JdbcPagingItemReaderBuilder<BillingHistory>()
                 .name("targetDateBillingReader")
                 .dataSource(dataSource)
+                .saveState(false) // 멀티 쓰레드 정합성 오류 안 생기도록
                 .fetchSize(CHUNK_SIZE)
-                .rowMapper(new BeanPropertyRowMapper<>(BillingHistory.class))
+                .rowMapper((rs, rowNum) -> {
+                    Line line = Line.builder()
+                            .id(rs.getLong("line_id"))
+                            .build();
+
+                    return BillingHistory.builder()
+                            .id(rs.getLong("billing_id"))
+                            .amount(rs.getBigDecimal("amount"))
+                            .billingMonth(rs.getString("billing_month"))
+                            .line(line)
+                            // 임의값 0으로 세팅
+                            .planId(0L)
+                            .usage(0)
+                            .benefitAmount(BigDecimal.ZERO)
+                            .userAt(LocalDateTime.now())
+                            .build();
+                })
                 .queryProvider(targetDateQueryProvider(dataSource))
                 .parameterValues(params)
                 .pageSize(CHUNK_SIZE)
@@ -107,14 +139,12 @@ public class InvoiceJobConfig {
         // 전부 정산되 가격이 amount로 올 경우
         provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
 
-        provider.setFromClause(
-                "FROM BillingHistory b " +
-                        "INNER JOIN Line l ON b.line_id = l.line_id " +
-                        "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id"
-        );
+        provider.setFromClause("FROM BillingHistory b " +
+                "INNER JOIN Line l ON b.line_id = l.line_id " +
+                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
 
         // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
-        provider.setWhereClause("WHERE d.date = :targetDay AND b.billing_month = :billingMonth");
+        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
 
         return provider.getObject();
@@ -142,8 +172,19 @@ public class InvoiceJobConfig {
         return new JdbcBatchItemWriterBuilder<Invoice>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Invoice (line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
-                        "VALUES (:line.id, :billingHistory.id, :billingMonth, :totalAmount, :status, :dueDate, :createdAt)")
-                .beanMapped()
+                        "VALUES (:lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, :createdAt)")
+                // status enum이어서 .beanMapped()에서 변경
+                .itemSqlParameterSourceProvider(item -> {
+                    MapSqlParameterSource params = new MapSqlParameterSource();
+                    params.addValue("lineId", item.getLine().getId());
+                    params.addValue("billingId", item.getBillingHistory().getId());
+                    params.addValue("billingMonth", item.getBillingMonth());
+                    params.addValue("totalAmount", item.getTotalAmount());
+                    params.addValue("status", item.getStatus().name());
+                    params.addValue("dueDate", item.getDueDate());
+                    params.addValue("createdAt", LocalDateTime.now());
+                    return params;
+                })
                 .build();
     }
 
@@ -153,5 +194,51 @@ public class InvoiceJobConfig {
         return new CompositeItemWriterBuilder<Invoice>()
                 .delegates(jdbcInvoiceWriter(), invoiceKafkaSender) // 순서대로 실행(db 삽입 후 kafka 전송)
                 .build();
+    }
+
+    // 쓰레드 작업
+    @Bean
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(8); // 본인 PC CPU 코어 수에 맞게 설정, yml도 수정 필요
+        executor.setMaxPoolSize(16);
+        executor.setQueueCapacity(500); // 대기 큐
+        executor.initialize();
+        return executor;
+    }
+
+    // 로그
+    @Bean
+    public ChunkListener chunkListener() {
+        return new ChunkListener() {
+            private long lastTime = System.currentTimeMillis();
+
+            @Override
+            public void afterChunk(ChunkContext context) {
+                long currentTime = System.currentTimeMillis();
+                long diffTime = currentTime - lastTime;
+                long count = context.getStepContext().getStepExecution().getReadCount();
+
+                System.out.printf("[%s] [%s]>>> 처리된 레코드: %d건 | 이번 1,000건 소요 시간: %.2f초\n",
+                        java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")),
+                        Thread.currentThread().getName(),
+                        count,
+                        diffTime / 1000.0
+                );
+
+                lastTime = currentTime;
+            }
+        };
+    }
+
+    // 한 청크가 DB에 써진 후 영속성 컨텍스트를 완전히 비워 메모리 병목을 방지
+    @Bean
+    public ItemWriteListener<Invoice> writeListener() {
+        return new ItemWriteListener<Invoice>() {
+            @Override
+            public void afterWrite(Chunk<? extends Invoice> items) {
+                entityManager.clear();
+            }
+        };
     }
 }

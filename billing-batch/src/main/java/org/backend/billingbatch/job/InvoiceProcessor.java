@@ -25,7 +25,8 @@ public class InvoiceProcessor implements ItemProcessor<BillingHistory, Invoice> 
 
         // 청구서(Invoice) 엔티티 생성
         Invoice invoice = Invoice.builder()
-                .line(lineProxy)
+//                .line(lineProxy)
+                .line(Line.builder().id(history.getLine().getId()).build())
                 .billingHistory(history)
                 .billingMonth(history.getBillingMonth())
                 .totalAmount(history.getAmount()) // 계산된 버전이면 바로 넣으면 되서 속도 더 빨라짐
