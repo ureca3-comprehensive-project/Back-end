@@ -2,9 +2,8 @@ package org.backend.billingbatch.job;
 
 import org.backend.billingbatch.dto.BatchRunRequest;
 import org.backend.domain.billing.entity.BillingHistory;
-import org.backend.billingbatch.repository.BillingHistoryRepository;
-import org.backend.billingbatch.repository.InvoiceRepository;
-import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.billing.repository.BillingHistoryRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.billingbatch.services.BatchService;
 import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,9 +32,6 @@ public class BatchChunkTest {
     private BillingHistoryRepository billingHistoryRepository;
 
     @Autowired
-    private MicroPaymentRepository microPaymentRepository;
-
-    @Autowired
     private InvoiceRepository invoiceRepository;
 
     @Autowired
@@ -46,7 +42,6 @@ public class BatchChunkTest {
         // 깨끗한 상태에서 시작
         invoiceRepository.deleteAllInBatch();
         billingHistoryRepository.deleteAllInBatch();
-        microPaymentRepository.deleteAllInBatch();
 
         try {
             jdbcTemplate.execute("CREATE INDEX idx_micropayment_line_month ON micro_payment(line_id, pay_month)");

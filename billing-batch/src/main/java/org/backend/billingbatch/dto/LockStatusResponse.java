@@ -1,4 +1,4 @@
-package org.backend.domain.config;
+package org.backend.billingbatch.dto;
 
 import lombok.Builder;
 import lombok.Getter;

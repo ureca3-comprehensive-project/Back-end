@@ -4,18 +4,15 @@ import jakarta.persistence.EntityManager;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
 import org.backend.domain.microPayment.entity.MicroPayment;
-import org.backend.billingbatch.repository.BillingHistoryRepository;
-import org.backend.billingbatch.repository.InvoiceRepository;
-import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.billing.repository.BillingHistoryRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.domain.line.entity.Line;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
@@ -26,7 +23,6 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,9 +42,6 @@ public class InvoiceJobTest {
     private JobLauncherTestUtils jobLauncherTestUtils;
 
     @Autowired
-    private MicroPaymentRepository microPaymentRepository;
-
-    @Autowired
     private EntityManager em;
 
     // 초기화를 위해 Repository 추가 주입
@@ -61,7 +54,6 @@ public class InvoiceJobTest {
     @BeforeEach
     void setUp() {
         // 외래키 제약조건 순서 때문에 자식 -> 부모 순으로 지워야 안전
-        microPaymentRepository.deleteAll(); // 소액결제 삭제
         invoiceRepository.deleteAll();      // 결과 테이블(Invoice) 삭제
         billingHistoryRepository.deleteAll(); // 원천 데이터 삭제
 
@@ -81,12 +73,6 @@ public class InvoiceJobTest {
                 .build();
 
         billingHistoryRepository.save(history);
-    }
-
-    @AfterEach
-    @Transactional // 테스트 데이터 초기화를 위해 트랜잭션 사용
-    void tearDown() {
-        microPaymentRepository.deleteAll();
     }
 
     @Test
@@ -116,9 +102,6 @@ public class InvoiceJobTest {
 
     @ExtendWith(MockitoExtension.class)
     public static class InvoiceProcessorTest {
-        @Mock
-        private MicroPaymentRepository microPaymentRepository;
-
         @InjectMocks
         private InvoiceProcessor invoiceProcessor;
 

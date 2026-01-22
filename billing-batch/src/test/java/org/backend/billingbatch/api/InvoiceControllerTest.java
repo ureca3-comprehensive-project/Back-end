@@ -2,7 +2,7 @@ package org.backend.billingbatch.api;
 
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
-import org.backend.billingbatch.repository.InvoiceRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.domain.invoice.type.InvoiceStatus;
 import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +20,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

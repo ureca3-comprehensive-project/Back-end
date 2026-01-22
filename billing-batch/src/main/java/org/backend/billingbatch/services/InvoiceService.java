@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.dto.InvoiceDetailResponse;
 import org.backend.billingbatch.dto.InvoiceResponse;
 
-import org.backend.billingbatch.repository.InvoiceDetailRepository;
-import org.backend.billingbatch.repository.InvoiceRepository;
+import org.backend.domain.invoice.repository.InvoiceDetailRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.domain.invoice.entity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

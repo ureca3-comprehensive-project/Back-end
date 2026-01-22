@@ -104,32 +104,18 @@ public class InvoiceJobConfig {
         SqlPagingQueryProviderFactoryBean provider = new SqlPagingQueryProviderFactoryBean();
         provider.setDataSource(dataSource);
 
-        provider.setSelectClause(
-                "SELECT b.billing_id, b.line_id, b.amount, b.billing_month, " +
-                        "(SELECT COALESCE(SUM(m.pay_price), 0) FROM MicroPayment m WHERE m.line_id = b.line_id AND m.pay_month = b.billing_month) as microPaymentSum "
-        );
+        // 전부 정산되 가격이 amount로 올 경우
+        provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
 
         provider.setFromClause(
                 "FROM BillingHistory b " +
                         "INNER JOIN Line l ON b.line_id = l.line_id " +
-                        "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id "
+                        "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id"
         );
 
         // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
         provider.setWhereClause("WHERE d.date = :targetDay AND b.billing_month = :billingMonth");
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
-
-        // 전부 정산되 가격이 amount로 올 경우
-//        provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
-//
-//        provider.setFromClause(
-//                "FROM BillingHistory b " +
-//                        "INNER JOIN Line l ON b.line_id = l.line_id " +
-//                        "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id"
-//        );
-//
-//        provider.setWhereClause("WHERE d.date = :targetDay AND b.billing_month = :billingMonth");
-//        provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
 
         return provider.getObject();
     }

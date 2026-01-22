@@ -3,6 +3,7 @@ package org.backend.billingbatch.job;
 import lombok.RequiredArgsConstructor;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
+import org.backend.domain.invoice.entity.InvoiceDetail;
 import org.backend.domain.invoice.type.InvoiceStatus;
 import org.backend.domain.line.entity.Line;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
@@ -35,14 +36,14 @@ public class InvoiceProcessor implements ItemProcessor<BillingHistory, Invoice> 
                 .build();
 
         // 청구서 상세
-//        InvoiceDetail telecomDetail = InvoiceDetail.builder()
-//                .invoice(invoice) // 연관관계 설정
-//                .billingType("TELECOM_FEE")
-//                .amount(history.getAmount())
-//                .status("SUCCESS")
-//                .build();
-//
-//        invoice.addDetail(telecomDetail);
+        InvoiceDetail telecomDetail = InvoiceDetail.builder()
+                .invoice(invoice) // 연관관계 설정
+                .billingType("TELECOM_FEE")
+                .amount(history.getAmount())
+                .status("SUCCESS")
+                .build();
+
+        invoice.addDetail(telecomDetail);
 
         return invoice;
     }

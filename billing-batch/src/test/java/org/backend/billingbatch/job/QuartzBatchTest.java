@@ -1,8 +1,6 @@
 package org.backend.billingbatch.job;
 
-import org.backend.billingbatch.repository.BillingHistoryRepository;
-import org.backend.billingbatch.repository.InvoiceRepository;
-import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,8 +27,6 @@ public class QuartzBatchTest {
     @Autowired private Scheduler scheduler;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private InvoiceRepository invoiceRepository;
-    @Autowired private BillingHistoryRepository billingHistoryRepository;
-    @Autowired private MicroPaymentRepository microPaymentRepository;
 
     @BeforeEach
     void setUp() {

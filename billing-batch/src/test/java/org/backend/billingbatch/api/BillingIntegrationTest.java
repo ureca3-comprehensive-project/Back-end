@@ -1,10 +1,8 @@
 package org.backend.billingbatch.api;
 
 import org.backend.domain.billing.entity.BillingHistory;
-import org.backend.domain.microPayment.entity.MicroPayment;
-import org.backend.billingbatch.repository.BillingHistoryRepository;
-import org.backend.billingbatch.repository.InvoiceRepository;
-import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.billing.repository.BillingHistoryRepository;
+import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,9 +45,6 @@ class BillingIntegrationTest {
     private BillingHistoryRepository billingHistoryRepository;
 
     @Autowired
-    private MicroPaymentRepository microPaymentRepository;
-
-    @Autowired
     private InvoiceRepository invoiceRepository;
 
     @BeforeEach
@@ -57,7 +52,6 @@ class BillingIntegrationTest {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         invoiceRepository.deleteAll();
         billingHistoryRepository.deleteAll();
-        microPaymentRepository.deleteAll();
     }
 
     @Test
@@ -76,11 +70,6 @@ class BillingIntegrationTest {
                 .userAt(java.time.LocalDateTime.now())
                 .planId(1L)
                 .build();
-        MicroPayment pay1 = MicroPayment.builder()
-                .lineId(1)
-                .payMonth(targetMonth)
-                .payPrice(BigDecimal.valueOf(10000))
-                .build();
         BillingHistory user2 = BillingHistory.builder()
                 .line(line2)
                 .amount(BigDecimal.valueOf(30000))
@@ -92,7 +81,6 @@ class BillingIntegrationTest {
                 .build();
 
         billingHistoryRepository.saveAll(List.of(user1, user2));
-        microPaymentRepository.save(pay1);
 
         // When
         String jsonRequest = "{\"jobName\":\"createInvoiceJob\", \"billingMonth\":\"2024-01\", \"isForced\":false}";
