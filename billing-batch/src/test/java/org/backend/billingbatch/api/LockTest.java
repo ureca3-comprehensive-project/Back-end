@@ -1,6 +1,6 @@
 package org.backend.billingbatch.api;
 
-import org.backend.billingbatch.entity.LockStatusResponse;
+import org.backend.domain.config.LockStatusResponse;
 import org.backend.billingbatch.services.BatchService;
 import org.backend.billingbatch.services.LockService;
 import org.junit.jupiter.api.BeforeEach;

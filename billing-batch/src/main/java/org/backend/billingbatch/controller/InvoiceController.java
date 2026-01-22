@@ -20,9 +20,11 @@ public class InvoiceController {
 
     // 청구서 목록 조회 (페이징)
     @GetMapping
-    public ResponseEntity<Page<Invoice>> getInvoices(Pageable pageable) {
-        // 실제로는 DTO로 변환해서 내보내는 것이 좋음
-        return ResponseEntity.ok(invoiceService.findAll(pageable));
+    public ResponseEntity<Page<InvoiceResponse>> getInvoices(Pageable pageable) {
+        Page<InvoiceResponse> responses = invoiceService.findAll(pageable)
+                .map(InvoiceResponse::fromEntity);
+
+        return ResponseEntity.ok(responses);
     }
 
     // 청구서 단건 조회

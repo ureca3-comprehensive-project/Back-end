@@ -1,12 +1,13 @@
 package org.backend.billingbatch.job;
 
 import jakarta.persistence.EntityManager;
-import org.backend.billingbatch.entity.BillingHistory;
+import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
-import org.backend.billingbatch.entity.MicroPayment;
+import org.backend.domain.microPayment.entity.MicroPayment;
 import org.backend.billingbatch.repository.BillingHistoryRepository;
 import org.backend.billingbatch.repository.InvoiceRepository;
 import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,7 +69,17 @@ public class InvoiceJobTest {
         String targetMonth = "2024-01";
 
         // 통신요금 데이터 생성
-        BillingHistory history = new BillingHistory(1L, BigDecimal.valueOf(12000), targetMonth);
+        Line line = Line.builder().id(1L).build();
+        BillingHistory history = BillingHistory.builder()
+                .line(line)
+                .amount(BigDecimal.valueOf(12000))
+                .billingMonth(targetMonth)
+                .benefitAmount(BigDecimal.ZERO)
+                .usage(100)
+                .userAt(LocalDateTime.now())
+                .planId(1L)
+                .build();
+
         billingHistoryRepository.save(history);
     }
 
@@ -116,12 +128,25 @@ public class InvoiceJobTest {
             // given
             String targetMonth = "2024-01";
             // 통신요금 50,000원
-            BillingHistory history = new BillingHistory(1L, BigDecimal.valueOf(50000), targetMonth);
+            Line line = Line.builder().id(1L).build();
+            BillingHistory history = BillingHistory.builder()
+                    .line(line)
+                    .amount(BigDecimal.valueOf(50000))
+                    .billingMonth(targetMonth)
+                    .build();
 
             // 소액결제 2건 (10,000원 + 5,000원)
             List<MicroPayment> mockPayments = Arrays.asList(
-                    new MicroPayment(1L, targetMonth, BigDecimal.valueOf(10000)),
-                    new MicroPayment(1L, targetMonth, BigDecimal.valueOf(5000))
+                    MicroPayment.builder()
+                            .lineId(1)
+                            .payMonth(targetMonth)
+                            .payPrice(BigDecimal.valueOf(10000))
+                            .build(),
+                    MicroPayment.builder()
+                            .lineId(1)
+                            .payMonth(targetMonth)
+                            .payPrice(BigDecimal.valueOf(5000))
+                            .build()
             );
 
             given(microPaymentRepository.findByLineIdAndPayMonth(anyLong(), any()))

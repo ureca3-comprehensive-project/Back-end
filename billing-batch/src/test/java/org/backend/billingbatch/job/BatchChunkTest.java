@@ -1,11 +1,12 @@
 package org.backend.billingbatch.job;
 
 import org.backend.billingbatch.dto.BatchRunRequest;
-import org.backend.billingbatch.entity.BillingHistory;
+import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.billingbatch.repository.BillingHistoryRepository;
 import org.backend.billingbatch.repository.InvoiceRepository;
 import org.backend.billingbatch.repository.MicroPaymentRepository;
 import org.backend.billingbatch.services.BatchService;
+import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,18 @@ public class BatchChunkTest {
         System.out.println("🚀 데이터 " + totalCount + "개 생성 시작...");
         for (long i = 1; i <= totalCount; i++) {
             // lineId는 1부터 2500까지
-            dummyData.add(new BillingHistory(i, BigDecimal.valueOf(10000), targetMonth));
+            Line line = Line.builder().id(i).build();
+            dummyData.add(
+                    BillingHistory.builder()
+                            .line(line)
+                            .amount(BigDecimal.valueOf(10000))
+                            .billingMonth(targetMonth)
+                            .benefitAmount(BigDecimal.ZERO)
+                            .usage(100)
+                            .userAt(java.time.LocalDateTime.now())
+                            .planId(1L)
+                            .build()
+            );
         }
         billingHistoryRepository.saveAll(dummyData);
         System.out.println("✅ DB Insert 완료 (BillingHistory: " + billingHistoryRepository.count() + "건)");

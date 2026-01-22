@@ -1,25 +1,25 @@
 package org.backend.billingbatch.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import org.backend.billingbatch.entity.InvoiceDetail;
+import lombok.*;
+import org.backend.domain.invoice.entity.InvoiceDetail;
 
 import java.math.BigDecimal;
 
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InvoiceDetailResponse {
     private Long invoiceDetailId;
     private String billingType;
     private BigDecimal amount;
-    private String status;
 
     public static InvoiceDetailResponse from(InvoiceDetail detail) {
         return InvoiceDetailResponse.builder()
-                .invoiceDetailId(detail.getInvoiceDetailId())
+                .invoiceDetailId(detail.getId())
                 .billingType(detail.getBillingType())
                 .amount(detail.getAmount())
-                .status(detail.getStatus())
                 .build();
     }
 }

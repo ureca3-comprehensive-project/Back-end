@@ -1,4 +1,4 @@
-package org.backend.billingbatch.entity;
+package org.backend.domain.config;
 
 import lombok.Builder;
 import lombok.Getter;

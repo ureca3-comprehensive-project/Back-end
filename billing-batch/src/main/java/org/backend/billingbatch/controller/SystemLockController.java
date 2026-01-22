@@ -1,7 +1,7 @@
 package org.backend.billingbatch.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.entity.LockStatusResponse;
+import org.backend.domain.config.LockStatusResponse;
 import org.backend.billingbatch.services.LockService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

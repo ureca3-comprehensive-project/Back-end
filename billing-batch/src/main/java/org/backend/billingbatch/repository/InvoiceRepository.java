@@ -1,6 +1,6 @@
 package org.backend.billingbatch.repository;
 
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.invoice.entity.Invoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

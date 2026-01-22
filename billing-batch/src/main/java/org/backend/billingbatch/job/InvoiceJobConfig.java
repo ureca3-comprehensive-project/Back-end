@@ -1,7 +1,7 @@
 package org.backend.billingbatch.job;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.entity.BillingHistory;
+import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -156,7 +156,7 @@ public class InvoiceJobConfig {
         return new JdbcBatchItemWriterBuilder<Invoice>()
                 .dataSource(dataSource)
                 .sql("INSERT INTO Invoice (line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
-                        "VALUES (:lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, :createdAt)")
+                        "VALUES (:line.id, :billingHistory.id, :billingMonth, :totalAmount, :status, :dueDate, :createdAt)")
                 .beanMapped()
                 .build();
     }

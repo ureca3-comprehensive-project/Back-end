@@ -58,6 +58,4 @@ public class BillingHistory {
 	
 	@Column(precision = 20, scale = 2 , nullable = false , name = "benefit_amount")
 	private BigDecimal benefitAmount;
-	
-
 }

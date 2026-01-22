@@ -3,9 +3,10 @@ package org.backend.billingbatch.services;
 import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.dto.InvoiceDetailResponse;
 import org.backend.billingbatch.dto.InvoiceResponse;
-import org.backend.billingbatch.entity.Invoice;
+
 import org.backend.billingbatch.repository.InvoiceDetailRepository;
 import org.backend.billingbatch.repository.InvoiceRepository;
+import org.backend.domain.invoice.entity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,20 +49,13 @@ public class InvoiceService {
     }
 
     public InvoiceResponse getInvoiceByUniqueKey(Long lineId, String billingMonth) {
-        Invoice invoice = invoiceRepository.findByLineIdAndBillingMonth(lineId, billingMonth)
+        return invoiceRepository.findByLineIdAndBillingMonth(lineId, billingMonth)
+                .map(InvoiceResponse::fromEntity)
                 .orElseThrow(() -> new IllegalArgumentException("청구서를 찾을 수 없습니다."));
-
-        return InvoiceResponse.builder()
-                .invoiceId(invoice.getInvoiceId())
-                .lineId(invoice.getLineId())
-                .billingMonth(invoice.getBillingMonth())
-                .totalAmount(invoice.getTotalAmount())
-                .status(invoice.getStatus())
-                .build();
     }
 
     public List<InvoiceDetailResponse> getInvoiceDetails(Long invoiceId) {
-        return detailRepository.findByInvoice_InvoiceId(invoiceId).stream()
+        return detailRepository.findByInvoice_Id(invoiceId).stream()
                 .map(InvoiceDetailResponse::from)
                 .collect(Collectors.toList());
     }

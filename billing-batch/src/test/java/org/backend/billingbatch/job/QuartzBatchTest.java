@@ -111,7 +111,7 @@ public class QuartzBatchTest {
 
         // 검증 2: 생성된 청구서 내용 확인
         var invoice = invoiceRepository.findAll().get(0);
-        assertThat(invoice.getLineId()).isEqualTo(1L); // 타겟 고객 (Line ID 1)
+        assertThat(invoice.getLine().getId()).isEqualTo(1L); // 타겟 고객 (Line ID 1)
         assertThat(invoice.getBillingMonth()).isEqualTo(billingMonth); // 청구월 확인
 
         System.out.println("✅ 테스트 성공! 납부일이 " + targetDay + "일인 고객의 청구서만 정확히 생성되었습니다.");

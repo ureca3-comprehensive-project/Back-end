@@ -1,7 +1,10 @@
 package org.backend.billingbatch.api;
 
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.billing.entity.BillingHistory;
+import org.backend.domain.invoice.entity.Invoice;
 import org.backend.billingbatch.repository.InvoiceRepository;
+import org.backend.domain.invoice.type.InvoiceStatus;
+import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,12 +73,15 @@ public class InvoiceControllerTest {
     }
 
     private Invoice createInvoice(Long lineId, String month, int amount) {
+        Line line = Line.builder().id(lineId).build();
+        BillingHistory bh = BillingHistory.builder().id(1L).build(); // 테스트용 임시 ID
+
         return Invoice.builder()
-                .lineId(lineId)
+                .line(line)
+                .billingHistory(bh)
                 .billingMonth(month)
                 .totalAmount(BigDecimal.valueOf(amount))
-                .status("CREATED")
-                .createdAt(LocalDateTime.now())
+                .status(InvoiceStatus.CREATED)
                 .build();
     }
 
@@ -100,9 +106,9 @@ public class InvoiceControllerTest {
     void getInvoiceByIdTest() throws Exception {
         Invoice target = savedInvoices.get(0);
 
-        mockMvc.perform(get("/billing/bills/{billId}", target.getInvoiceId()))
+        mockMvc.perform(get("/billing/bills/{billId}", target.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.lineId", is(target.getLineId().intValue())))
+                .andExpect(jsonPath("$.lineId", is(target.getLine().getId().intValue())))
                 .andExpect(jsonPath("$.billingMonth", is(target.getBillingMonth())));
     }
 
@@ -148,7 +154,7 @@ public class InvoiceControllerTest {
     void getInvoiceDetailsTest() throws Exception {
         Invoice target = savedInvoices.get(0);
 
-        mockMvc.perform(get("/billing/bills/{billId}/items", target.getInvoiceId()))
+        mockMvc.perform(get("/billing/bills/{billId}/items", target.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
@@ -160,7 +166,7 @@ public class InvoiceControllerTest {
         Invoice target = savedInvoices.get(0);
         long initialCount = invoiceRepository.count();
 
-        mockMvc.perform(delete("/billing/bills/{billId}", target.getInvoiceId()))
+        mockMvc.perform(delete("/billing/bills/{billId}", target.getId()))
                 .andExpect(status().isNoContent());
 
         assertEquals(initialCount - 1, invoiceRepository.count());

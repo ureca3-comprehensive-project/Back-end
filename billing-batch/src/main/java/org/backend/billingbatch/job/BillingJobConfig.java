@@ -3,7 +3,6 @@ package org.backend.billingbatch.job;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 
-
 import org.backend.billingbatch.dto.BillingResponse;
 import org.backend.billingbatch.dto.ContractInfo;
 import org.springframework.batch.core.job.Job;
@@ -87,10 +86,5 @@ public class BillingJobConfig {
                 .beanMapped()
                 .build();
     }
-
-
-
-
-
 
 }

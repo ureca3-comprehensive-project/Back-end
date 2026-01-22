@@ -1,10 +1,11 @@
 package org.backend.billingbatch.api;
 
-import org.backend.billingbatch.entity.BillingHistory;
-import org.backend.billingbatch.entity.MicroPayment;
+import org.backend.domain.billing.entity.BillingHistory;
+import org.backend.domain.microPayment.entity.MicroPayment;
 import org.backend.billingbatch.repository.BillingHistoryRepository;
 import org.backend.billingbatch.repository.InvoiceRepository;
 import org.backend.billingbatch.repository.MicroPaymentRepository;
+import org.backend.domain.line.entity.Line;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,9 +65,31 @@ class BillingIntegrationTest {
     void runBatchAndGetInvoicesTest() throws Exception {
         // Given
         String targetMonth = "2024-01";
-        BillingHistory user1 = new BillingHistory(1L, BigDecimal.valueOf(50000), targetMonth);
-        MicroPayment pay1 = new MicroPayment(1L, targetMonth, BigDecimal.valueOf(10000));
-        BillingHistory user2 = new BillingHistory(2L, BigDecimal.valueOf(30000), targetMonth);
+        Line line1 = Line.builder().id(1L).build();
+        Line line2 = Line.builder().id(2L).build();
+        BillingHistory user1 = BillingHistory.builder()
+                .line(line1)
+                .amount(BigDecimal.valueOf(50000))
+                .billingMonth(targetMonth)
+                .benefitAmount(BigDecimal.ZERO)
+                .usage(100)
+                .userAt(java.time.LocalDateTime.now())
+                .planId(1L)
+                .build();
+        MicroPayment pay1 = MicroPayment.builder()
+                .lineId(1)
+                .payMonth(targetMonth)
+                .payPrice(BigDecimal.valueOf(10000))
+                .build();
+        BillingHistory user2 = BillingHistory.builder()
+                .line(line2)
+                .amount(BigDecimal.valueOf(30000))
+                .billingMonth(targetMonth)
+                .benefitAmount(BigDecimal.ZERO)
+                .usage(50)
+                .userAt(java.time.LocalDateTime.now())
+                .planId(1L)
+                .build();
 
         billingHistoryRepository.saveAll(List.of(user1, user2));
         microPaymentRepository.save(pay1);

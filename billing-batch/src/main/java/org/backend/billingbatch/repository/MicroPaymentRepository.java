@@ -1,6 +1,6 @@
 package org.backend.billingbatch.repository;
 
-import org.backend.billingbatch.entity.MicroPayment;
+import org.backend.domain.microPayment.entity.MicroPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.backend.billingbatch.dto.BatchRunRequest;
 import org.backend.billingbatch.dto.BatchRunResponse;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.JobInstance;
@@ -13,18 +14,28 @@ import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.batch.core.repository.explore.JobExplorer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class BatchService {
     private final JobLauncher jobLauncher;
     private final JobExplorer jobExplorer; // 배치 메타 데이터 조회용
     private final JobOperator jobOperator;
-    private final Job invoiceJob;          // Batch 모듈에서 등록한 Job Bean
+    private final Job invoiceJob;
+
+    public BatchService(JobLauncher jobLauncher,
+                        JobExplorer jobExplorer,
+                        JobOperator jobOperator,
+                        @Qualifier("createInvoiceJob") Job invoiceJob) {
+        this.jobLauncher = jobLauncher;
+        this.jobExplorer = jobExplorer;
+        this.jobOperator = jobOperator;
+        this.invoiceJob = invoiceJob;
+    }
 
     // 수동 배치 실행
     public Long runJob(BatchRunRequest request) {
@@ -35,7 +46,7 @@ public class BatchService {
                     .toJobParameters();
             return jobLauncher.run(invoiceJob, params).getId();
         } catch (Exception e) {
-            throw new RuntimeException("배치 실행 실패", e);
+            throw new RuntimeException("배치 실행 실패:"+request.getJobName(), e);
         }
     }
 

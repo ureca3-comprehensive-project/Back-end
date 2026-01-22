@@ -1,6 +1,6 @@
 package org.backend.billingbatch.repository;
 
-import org.backend.billingbatch.entity.BillingHistory;
+import org.backend.domain.billing.entity.BillingHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 // reader
