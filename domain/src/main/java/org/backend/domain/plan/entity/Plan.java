@@ -1,5 +1,7 @@
 package org.backend.domain.plan.entity;
 
+import java.math.BigDecimal;
+
 import org.backend.domain.common.entity.BaseEntity;
 import org.backend.domain.plan.type.NetworkType;
 
@@ -29,8 +31,8 @@ public class Plan extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(name = "base_price", nullable = false)
-    private Integer basePrice;
+    @Column(name = "base_price", nullable = false , precision = 20, scale = 2)
+    private BigDecimal basePrice;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "network_type", nullable = false, length = 10)

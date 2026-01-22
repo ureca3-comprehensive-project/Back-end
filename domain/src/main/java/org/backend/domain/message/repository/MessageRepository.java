@@ -7,13 +7,17 @@ import org.backend.domain.message.entity.Message;
 import org.backend.domain.message.type.MessageStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
+
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 	
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""
 			SELECT m FROM Message m
 			WHERE m.status in (:statuses)

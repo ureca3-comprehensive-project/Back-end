@@ -1,4 +1,4 @@
-package org.backend.domain.line.repository;
+package org.backend.domain.line.type;
 
 public enum LineStatus {
     ACTIVE,
