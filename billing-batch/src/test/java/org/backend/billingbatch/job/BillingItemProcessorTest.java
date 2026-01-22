@@ -70,7 +70,7 @@ class BillingItemProcessorTest {
         
         when(totalFeeCalculator.totalFeeCalculate(any())).thenReturn(calculatedVoiceFee, calculatedDataFee);
 
-        
+
         BigDecimal discountedBasePrice = new BigDecimal("45000");
         when(discountCalculator.discountCalculate(any(), any(), any())).thenReturn(discountedBasePrice);
 
