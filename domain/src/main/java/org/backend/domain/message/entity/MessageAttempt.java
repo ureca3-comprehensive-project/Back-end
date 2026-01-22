@@ -18,10 +18,14 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "message_attempt")
@@ -29,33 +33,36 @@ public class MessageAttempt extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "attempt_id")
 	private Long id;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "message_id", nullable = false)
 	private Message message;
 	
-	@Column
+	@Column(name = "attempt_no")
 	private Long attemptNo;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@Column(nullable = false, name = "status")
 	private MessageAttemptStatus status;
+
+	@Column(nullable = true, length = 80, name = "provider_message_id")
+	private String providerMessageId;
 	
 	@Lob
+	@Column(name = "request_payload")
     private String requestPayload;
 	
-	@Column(nullable = true, length = 80)
-	private String providerMessageId;
 
-	@Column(nullable = true)
+	@Column(nullable = true, name = "http_status")
 	private Integer httpStatus;
 	
 	
-	@Column(nullable = true, length = 50)
+	@Column(nullable = true, length = 50, name = "fail_code")
 	private String failCode;
 	
-	@Column(nullable = true, length = 255)
+	@Column(nullable = true, length = 255, name = "fail_reason")
 	private String failReason;
 	
 	@Column(name = "requested_at")

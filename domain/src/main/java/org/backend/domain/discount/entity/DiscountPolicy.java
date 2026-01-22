@@ -25,13 +25,14 @@ public class DiscountPolicy extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "policy_ids")
     private Integer id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, name = "name")
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, name = "category")
     private DiscountCategory category;
 
     @Column(nullable = false, precision = 5, scale = 4)

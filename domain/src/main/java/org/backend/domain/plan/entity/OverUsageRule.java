@@ -27,6 +27,7 @@ public class OverUsageRule extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "over_usage_rule_id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
