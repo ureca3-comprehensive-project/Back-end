@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.backend.domain.line.entity.Line;
-import org.backend.domain.plan.entity.Plan;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

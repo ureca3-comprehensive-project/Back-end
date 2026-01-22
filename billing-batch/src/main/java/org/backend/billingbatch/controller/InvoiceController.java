@@ -3,7 +3,7 @@ package org.backend.billingbatch.controller;
 import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.dto.InvoiceDetailResponse;
 import org.backend.billingbatch.dto.InvoiceResponse;
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.invoice.entity.Invoice;
 import org.backend.billingbatch.services.InvoiceService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

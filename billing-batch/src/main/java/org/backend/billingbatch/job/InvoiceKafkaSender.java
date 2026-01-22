@@ -1,41 +1,52 @@
 package org.backend.billingbatch.job;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.dto.InvoiceEvent;
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.invoice.entity.Invoice;
+import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.repository.MessageRepository;
+import org.backend.domain.message.type.ChannelType;
+import org.backend.domain.message.type.MessageStatus;
+import org.backend.domain.template.entity.Template;
+import org.backend.domain.template.repository.TemplateRepository;
 import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ItemWriter;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-// kafka에게 청구서 배치 전송
+import java.util.UUID;
+
+// kafka에게 청구서 배치를 메시지로 만들어서 전송
 @Component
 @RequiredArgsConstructor
 public class InvoiceKafkaSender implements ItemWriter<Invoice> {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String TOPIC = "invoice-created-topic";
+    private final MessageRepository messageRepository;
+    private final TemplateRepository templateRepository;
 
     @Override
     public void write(Chunk<? extends Invoice> chunk) {
 
-        if (kafkaTemplate == null) {
-            throw new IllegalStateException("KafkaTemplate이 주입되지 않았습니다.");
-        }
+        Page<Template> templates = templateRepository.findByType(ChannelType.EMAIL, PageRequest.of(0, 1));
+        Template emailTemplate = templates.getContent().stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("EMAIL용 청구서 템플릿이 존재하지 않습니다."));
+
 
         for (Invoice invoice : chunk) {
-            // Entity -> Event DTO로 변환
-            InvoiceEvent event = InvoiceEvent.builder()
-                    .invoiceId(invoice.getInvoiceId())
-                    .lineId(invoice.getLineId())
-                    .billingMonth(invoice.getBillingMonth())
-                    .totalAmount(invoice.getTotalAmount().longValue())
-                    .messageType("INVOICE_CREATED")
+            // 메시지 엔티티 생성
+            Message message = Message.builder()
+                    .invoice(invoice)
+                    .template(emailTemplate)
+                    .channelType(ChannelType.EMAIL) // 기본 채널인 이메일로 설정
+                    .status(MessageStatus.PENDING) // 상태는 대기로 설정하여 바로 kafka에서 처리 할 수 있도록 설정
+                    .dedupKey("INV-" + invoice.getBillingMonth() + "-" + invoice.getId()) // 중복 발송 방지 키
+                    .correlationId(UUID.randomUUID().toString())
+                    .retryCount(0)
+                    .maxRetry(3)
                     .build();
 
-            // Kafka 전송 (Key: lineId, Value: event) - 실제 받아서 처리하는 방식에 따라 변경 필요
-            // lineId를 String으로 변환(충돌 줄이기 위함)해서 Key로 사용 (순서 보장)
-            kafkaTemplate.send(TOPIC, String.valueOf(invoice.getLineId()), event);
+            messageRepository.save(message);
         }
     }
 }

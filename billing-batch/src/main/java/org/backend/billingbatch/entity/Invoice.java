@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// domain 엔티티 사용으로 수정하면서 다른 코드들도 변경 필요
 @Entity
 @Getter
 @Setter

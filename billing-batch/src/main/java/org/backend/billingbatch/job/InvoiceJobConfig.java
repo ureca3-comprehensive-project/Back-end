@@ -2,7 +2,7 @@ package org.backend.billingbatch.job;
 
 import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.entity.BillingHistory;
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.invoice.entity.Invoice;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.Job;

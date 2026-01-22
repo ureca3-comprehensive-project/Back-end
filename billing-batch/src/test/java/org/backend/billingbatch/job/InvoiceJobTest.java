@@ -2,7 +2,7 @@ package org.backend.billingbatch.job;
 
 import jakarta.persistence.EntityManager;
 import org.backend.billingbatch.entity.BillingHistory;
-import org.backend.billingbatch.entity.Invoice;
+import org.backend.domain.invoice.entity.Invoice;
 import org.backend.billingbatch.entity.MicroPayment;
 import org.backend.billingbatch.repository.BillingHistoryRepository;
 import org.backend.billingbatch.repository.InvoiceRepository;
@@ -135,7 +135,7 @@ public class InvoiceJobTest {
             // 최종금액 = 65,000 * 1.1 = 71,500
             assertThat(result.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(71500));
             assertThat(result.getStatus()).isEqualTo("CREATED");
-            assertThat(result.getLineId()).isEqualTo(1L);
+            assertThat(result.getLine()).isEqualTo(1L);
 
             System.out.println("테스트 성공! 생성된 청구서 금액: " + result.getTotalAmount());
         }
