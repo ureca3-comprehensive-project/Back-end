@@ -123,13 +123,13 @@ public class MessageService {
     public List<Map<String, Object>> history() {
         return stores.attempts.stream()
             .map(a -> Map.<String, Object>of(
-                    "attemptId", a.id(),
-                    "messageId", a.messageId(),
-                    "attemptNo", a.attemptNo(),
-                    "status", a.status(),
-                    "provider", a.provider(),
-                    "httpStatus", a.httpStatus(),
-                    "createdAt", a.createdAt().toString()
+                "attemptId", a.id(),
+                "messageId", a.messageId(),
+                "attemptNo", a.attemptNo(),
+                "status", a.status(),
+                "provider", a.provider(),
+                "httpStatus", a.httpStatus(),
+                "createdAt", a.createdAt().toString()
             ))
             .toList();
     }

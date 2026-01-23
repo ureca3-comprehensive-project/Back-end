@@ -41,7 +41,7 @@ public class BillingHistory {
     @Column(name = "plan_id", nullable = false)
     private Long planId;
 	
-	@Column(nullable = false, name = "`usage`")
+	@Column(nullable = false, name = "usage")
 	private int usage;
 	
 	@Column(precision = 20, scale = 2 , nullable = false, name = "amount")
