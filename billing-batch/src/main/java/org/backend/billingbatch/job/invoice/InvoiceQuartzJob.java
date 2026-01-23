@@ -1,4 +1,4 @@
-package org.backend.billingbatch.job;
+package org.backend.billingbatch.job.invoice;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

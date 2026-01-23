@@ -1,4 +1,4 @@
-package org.backend.billingbatch.job;
+package org.backend.billingbatch.job.invoice;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

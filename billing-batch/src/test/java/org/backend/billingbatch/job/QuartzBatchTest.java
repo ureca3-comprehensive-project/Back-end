@@ -1,5 +1,6 @@
 package org.backend.billingbatch.job;
 
+import org.backend.billingbatch.job.invoice.InvoiceQuartzJob;
 import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
