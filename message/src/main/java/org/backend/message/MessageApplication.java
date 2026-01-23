@@ -6,11 +6,7 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 
-@SpringBootApplication(scanBasePackages = {
-	    "org.backend.message",
-	    "org.backend.core",
-	    "org.backend.domain"
-	})
+@SpringBootApplication(scanBasePackages = "org.backend")
 @EntityScan(basePackages = "org.backend.domain")
 @EnableJpaRepositories(basePackages = "org.backend.domain")
 @EnableKafka
