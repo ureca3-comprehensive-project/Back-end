@@ -22,6 +22,10 @@ public class InvoiceBatchController {
     public ResponseEntity<Map<String, Object>> getBatchSummary(@RequestParam String jobName) {
         return ResponseEntity.ok(invoiceBatchPort.getBatchSummary(jobName));
     }
+//    @GetMapping("/{runId}/summary")
+//    public ResponseEntity<Map<String, Object>> getBatchSummary(@PathVariable("runId") Long runId) {
+//        return ResponseEntity.ok(invoiceBatchPort.getBatchSummaryById(runId));
+//    }
 
     // 배치 실패 상세
     @GetMapping("/{runId}/errors")
@@ -77,4 +81,17 @@ public class InvoiceBatchController {
     public ResponseEntity<Map<String, Object>> getDuplicateReport(@RequestParam String billingMonth) {
         return ResponseEntity.ok(invoiceBatchPort.getDuplicateReport(billingMonth));
     }
+
+//    // 배치 에러 요약 데이터
+//    @GetMapping("/{runId}/error/summary")
+//    public ResponseEntity<Map<String, Long>> getBatchErrorSummary(@PathVariable Long runId) {
+//        return ResponseEntity.ok(invoiceBatchPort.getErrorSummary(runId));
+//    }
+//
+//
+//    // 배치 처리 추이 조회
+//    @GetMapping("/execution-trends")
+//    public ResponseEntity<List<Map<String, Object>>> getBatchExecutionTrends() {
+//        return ResponseEntity.ok(invoiceBatchPort.getExecutionTrends());
+//    }
 }

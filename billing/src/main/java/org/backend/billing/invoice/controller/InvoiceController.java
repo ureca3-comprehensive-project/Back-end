@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/billing/bills")
@@ -29,7 +30,7 @@ public class InvoiceController {
 
     // 청구서 단건 조회
     @GetMapping("/{billId}")
-    public ResponseEntity<Invoice> getInvoice(@PathVariable Long billId) {
+    public ResponseEntity<InvoiceResponse> getInvoice(@PathVariable Long billId) {
         return ResponseEntity.ok(invoiceService.findById(billId));
     }
     // 청구서 단건 조회(유니크 키 기반)
@@ -60,5 +61,19 @@ public class InvoiceController {
         invoiceService.deleteInvoice(billId);
         return ResponseEntity.noContent().build();
     }
+
+//    // 통계 데이터 - 청구서 수, 지난달 대비 증가율
+//    @GetMapping("/statistics")
+//    public ResponseEntity<Map<String, Object>> getInvoiceStatistics() {
+//        // 오늘 날짜 기준 생성 건수 집계 로직 호출
+//        return ResponseEntity.ok(invoiceService.getTodayStatistics());
+//    }
+//
+//    // 청구서 어떤 형태로 보냈는지 확인
+//    @GetMapping("/{billId}/messages")
+//    public ResponseEntity<List<Map<String, Object>>> getRelatedMessages(@PathVariable Long billId) {
+//        List<Map<String, Object>> history = invoiceService.getRelatedMessageHistory(billId);
+//        return ResponseEntity.ok(history);
+//    }
 
 }

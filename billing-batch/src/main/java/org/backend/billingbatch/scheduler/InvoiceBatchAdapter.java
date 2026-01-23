@@ -8,6 +8,7 @@ import org.backend.billingbatch.services.BatchService;
 import org.backend.billingbatch.services.LockService;
 import org.backend.core.port.InvoiceBatchPort;
 import org.springframework.batch.core.job.JobExecution;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.backend.core.dto.LockStatusResponse;
 
@@ -22,6 +23,7 @@ public class InvoiceBatchAdapter implements InvoiceBatchPort {
 
     private final BatchService batchService;
     private final LockService lockService;
+    private final JdbcTemplate jdbcTemplate; // 복잡한 통계 쿼리용
 
     // --- [핵심] Entity -> DTO 변환 메서드 ---
     private BatchRunResponse toDto(JobExecution execution) {
@@ -97,6 +99,28 @@ public class InvoiceBatchAdapter implements InvoiceBatchPort {
             lockService.forceUnlock();
         }
     }
+
+//    @Override
+//    public Map<String, Long> getErrorSummary(Long runId) {
+//        String sql = "SELECT EXIT_MESSAGE FROM BATCH_STEP_EXECUTION WHERE JOB_EXECUTION_ID = ?";
+//        List<String> messages = jdbcTemplate.queryForList(sql, String.class, runId);
+//
+//        // 예시: 간단한 키워드 기반 분류
+//        long validationErrors = messages.stream().filter(m -> m.contains("Validation")).count();
+//        long timeoutErrors = messages.stream().filter(m -> m.contains("Timeout")).count();
+//
+//        return Map.of("VALIDATION_ERROR", validationErrors, "SYSTEM_TIMEOUT", timeoutErrors);
+//    }
+//
+//    @Override
+//    public List<Map<String, Object>> getExecutionTrends() {
+//        // 최근 일주일간의 성공/실패 건수를 가져오는 SQL
+//        String sql = "SELECT DATE(create_time) as date, status, COUNT(*) as count " +
+//                "FROM BATCH_JOB_EXECUTION " +
+//                "GROUP BY DATE(create_time), status " +
+//                "ORDER BY date DESC LIMIT 7";
+//        return jdbcTemplate.queryForList(sql);
+//    }
 
     // 락 상태 조회
     @Override

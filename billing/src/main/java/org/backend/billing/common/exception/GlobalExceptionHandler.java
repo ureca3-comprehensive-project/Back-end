@@ -1,6 +1,7 @@
 package org.backend.billing.common.exception;
 
 import org.backend.billing.common.ApiResponse;
+import org.backend.billing.invoice.exception.InvoiceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
     // 청구서 에러 처리
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiResponse<?> handleNotFound(IllegalArgumentException e) {
+    public ApiResponse<?> handleInvoiceNotFound(InvoiceNotFoundException e) {
         return ApiResponse.fail("NOT_FOUND: " + e.getMessage());
     }
 

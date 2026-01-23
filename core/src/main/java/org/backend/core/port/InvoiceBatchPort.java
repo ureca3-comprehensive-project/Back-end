@@ -10,6 +10,7 @@ import java.util.Map;
 public interface InvoiceBatchPort {
     // 1. 배치 요약 및 에러
     Map<String, Object> getBatchSummary(String jobName);
+//    Map<String, Object> getBatchSummaryById(Long runId);
     List<String> getJobErrors(Long runId);
 
     // 2. 배치 제어
@@ -29,6 +30,13 @@ public interface InvoiceBatchPort {
     // 6. 리포트
     Map<String, Object> getDuplicateReport(String billingMonth);
 
+//    // 에러 유형별 요약 통계
+//    Map<String, Long> getErrorSummary(Long runId);
+//
+//    // 배치 실행 추이
+//    List<Map<String, Object>> getExecutionTrends();
+
+    // 락 //
     // 락 상태 조회 기능
     LockStatusResponse getLockStatus();
 
@@ -37,4 +45,5 @@ public interface InvoiceBatchPort {
 
     // 락 획득
 //    public boolean tryAcquireLock();
+
 }
