@@ -48,6 +48,5 @@ public class MicroPayment {
 
     @Column(name = "pay_price", nullable = false, precision = 20, scale = 2)
     private BigDecimal payPrice;
-	
 
 }

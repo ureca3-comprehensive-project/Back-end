@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin · Monitoring</title>
+ <link rel="stylesheet" href="/admin/assets/styles.css"/>
+
+</head>
+<body data-page="monitoring">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div class="brand-title">U+ Billing Admin</div>
+          <div class="brand-sub">Failure Monitoring</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="./index.html" data-page="dashboard"><span class="dot"></span>대시보드</a>
+        <a href="./billing.html" data-page="billing"><span class="dot"></span>요금 명세서</a>
+        <a href="./messages.html" data-page="messages"><span class="dot"></span>메시지 발송 이력</a>
+        <a href="./templates.html" data-page="templates"><span class="dot"></span>메시지 템플릿</a>
+        <a href="./batch.html" data-page="batch"><span class="dot"></span>배치 실행/이력</a>
+        <a href="./monitoring.html" data-page="monitoring"><span class="dot"></span>장애/실패 모니터링</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="h1">장애 / 실패 모니터링</div>
+          <div class="desc">실패 목록 · ErrorCode 집계 · 발생 추이를 확인합니다.</div>
+        </div>
+        <div class="actions">
+          <div id="metaPill" class="pill"></div>
+        </div>
+      </div>
+
+      <section class="grid two">
+        <div class="card">
+          <h3>실패 유형별(ErrorCode) 집계</h3>
+          <table class="table">
+            <thead><tr><th>ErrorCode</th><th>Count</th></tr></thead>
+            <tbody id="sumTbody"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>장애 발생 추이</h3>
+          <div id="trendBox"></div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:12px;">
+        <h3>실패 메시지 목록</h3>
+        <table class="table">
+          <thead>
+            <tr><th>MessageId</th><th>Channel</th><th>ErrorCode</th><th>Provider</th><th>At</th></tr>
+          </thead>
+          <tbody id="failTbody"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

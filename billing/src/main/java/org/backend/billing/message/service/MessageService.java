@@ -134,8 +134,6 @@ public class MessageService {
             .toList();
     }
 
-
-
     public List<Map<String, Object>> failures() {
         return stores.messages.values().stream()
                 .filter(m -> m.status == MessageStatus.FAIL)

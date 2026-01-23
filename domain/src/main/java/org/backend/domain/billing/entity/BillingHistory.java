@@ -3,8 +3,8 @@ package org.backend.domain.billing.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.*;
 import org.backend.domain.line.entity.Line;
-import org.backend.domain.plan.entity.Plan;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,13 +16,9 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -59,6 +55,4 @@ public class BillingHistory {
 	
 	@Column(precision = 20, scale = 2 , nullable = false , name = "benefit_amount")
 	private BigDecimal benefitAmount;
-	
-
 }
