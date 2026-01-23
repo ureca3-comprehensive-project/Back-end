@@ -1,65 +1,49 @@
 package org.backend.billing.message.controller;
 
+import java.util.Map;
+
 import org.backend.billing.common.ApiResponse;
-import org.backend.billing.message.dto.request.RetryPolicyUpdateRequest;
-import org.backend.billing.message.dto.response.RetryPolicyResponse;
-import org.backend.billing.message.entity.RetryPolicyEntity;
-import org.backend.billing.message.repository.RetryPolicyRepository;
-import org.springframework.transaction.annotation.Transactional;
+import org.backend.billing.message.service.InMemoryStores;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/messages/retry-policy")
 public class RetryPolicyController {
 
-    private final RetryPolicyRepository retryPolicyRepository;
+    private final InMemoryStores stores;
 
-    public RetryPolicyController(RetryPolicyRepository retryPolicyRepository) {
-        this.retryPolicyRepository = retryPolicyRepository;
+    public RetryPolicyController(InMemoryStores stores) {
+        this.stores = stores;
     }
 
     @GetMapping
-    @Transactional(readOnly = true)
-    public ApiResponse<RetryPolicyResponse> getPolicy() {
-        RetryPolicyEntity p = getOrCreate();
-        return ApiResponse.ok(toResponse(p));
+    public ApiResponse<Map<String, Object>> getPolicy() {
+        var p = stores.retryPolicy;
+        return ApiResponse.ok(Map.of(
+                "maxAttempts", p.maxAttempts,
+                "baseDelayMillis", p.baseDelayMillis,
+                "backoffMultiplier", p.backoffMultiplier,
+                "emailFailRate", p.emailFailRate
+        ));
     }
 
-    /**
-     * ⚠️ 주의:
-     * RetryPolicyUpdateRequest가 primitive 타입이라 null이 못 들어옴.
-     * 그래서 PATCH라도 "전체 값을 덮어쓰기"로 동작함.
-     */
     @PatchMapping
-    @Transactional
-    public ApiResponse<RetryPolicyResponse> updatePolicy(@RequestBody RetryPolicyUpdateRequest req) {
-        RetryPolicyEntity p = getOrCreate();
+    public ApiResponse<Map<String, Object>> updatePolicy(@RequestBody RetryPolicyUpdateRequest req) {
+        var p = stores.retryPolicy;
 
-        // primitive라 null 체크 불가 -> 전체 덮어쓰기(그래도 patch 메서드 재사용)
-        p.patch(
-                req.maxAttempts(),
-                req.baseDelayMillis(),
-                req.backoffMultiplier(),
-                req.timeoutMillis(),
-                req.emailFailRate()
-        );
+        if (req.maxAttempts() != null) p.maxAttempts = req.maxAttempts();
+        if (req.baseDelayMillis() != null) p.baseDelayMillis = req.baseDelayMillis();
+        if (req.backoffMultiplier() != null) p.backoffMultiplier = req.backoffMultiplier();
+        if (req.emailFailRate() != null) p.emailFailRate = req.emailFailRate();
 
-        return ApiResponse.ok(toResponse(p));
+        return getPolicy();
     }
 
-    private RetryPolicyEntity getOrCreate() {
-        return retryPolicyRepository.findById(1L)
-                .orElseGet(() -> retryPolicyRepository.save(new RetryPolicyEntity()));
-    }
-
-    private RetryPolicyResponse toResponse(RetryPolicyEntity p) {
-        return new RetryPolicyResponse(
-                p.getMaxAttempts(),
-                p.getBaseDelayMillis(),
-                p.getBackoffMultiplier(),
-                p.getTimeoutMillis(),
-                p.getEmailFailRate(),
-                p.getUpdatedAt().toString()
-        );
-    }
+    // 컨트롤러 내부 record DTO (파일 추가 안 하고 이 파일에 같이 둠)
+    public record RetryPolicyUpdateRequest(
+            Integer maxAttempts,
+            Long baseDelayMillis,
+            Double backoffMultiplier,
+            Double emailFailRate
+    ) {}
 }

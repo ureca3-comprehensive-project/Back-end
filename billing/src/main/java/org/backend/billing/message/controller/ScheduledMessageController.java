@@ -17,11 +17,13 @@ public class ScheduledMessageController {
         this.messageService = messageService;
     }
 
+    // 예약 발송 목록
     @GetMapping
     public ApiResponse<List<Map<String, Object>>> scheduledList() {
         return ApiResponse.ok(messageService.scheduledList());
     }
 
+    // 금지시간(DND) 큐 flush
     @PostMapping("/dnd/flush")
     public ApiResponse<Map<String, Object>> flushDndQueue() {
         return ApiResponse.ok(messageService.flushDndQueue());

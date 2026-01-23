@@ -4,68 +4,63 @@ import java.time.LocalTime;
 import java.util.Map;
 
 import org.backend.billing.message.dto.request.TimeUpdateRequest;
-import org.backend.billing.message.entity.UserDndConfigEntity;
-import org.backend.billing.message.repository.MessageRepository;
-import org.backend.billing.message.repository.UserDndConfigRepository;
-import org.backend.billing.message.type.MessageStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TimeService {
 
-    private final UserDndConfigRepository dndRepo;
-    private final MessageRepository messageRepository;
+    private final InMemoryStores stores;
 
-    public TimeService(UserDndConfigRepository dndRepo, MessageRepository messageRepository) {
-        this.dndRepo = dndRepo;
-        this.messageRepository = messageRepository;
+    public TimeService(InMemoryStores stores) {
+        this.stores = stores;
     }
 
-    @Transactional(readOnly = true)
-    public Map<String, Object> get(Long userId) {
-        UserDndConfigEntity cfg = getOrCreate(userId);
+    // 1) 금지시간 조회
+    public Map<String, Object> get() {
         return Map.of(
-                "userId", userId,
-                "enabled", cfg.isEnabled(),
-                "startTime", cfg.getStartTime().toString(),
-                "endTime", cfg.getEndTime().toString(),
-                "updatedAt", cfg.getUpdatedAt().toString(),
-                "dndNow", isDndNow(userId)
+                "enabled", stores.dndConfig.enabled,               // ✅ 추가
+                "startTime", stores.dndConfig.start.toString(),
+                "endTime", stores.dndConfig.end.toString(),
+                "updatedAt", stores.dndConfig.updatedAt.toString(),
+                "dndNow", isDndNow()
         );
     }
 
-    @Transactional
-    public Map<String, Object> update(Long userId, TimeUpdateRequest req) {
-        UserDndConfigEntity cfg = getOrCreate(userId);
-        cfg.patch(req.enabled(), req.startTime(), req.endTime());
-        return get(userId);
+    // 2) 금지시간 설정(초기세팅/업데이트)
+    // - 기존 TimeUpdateRequest 유지 + enabled도 받도록 권장
+    public Map<String, Object> update(TimeUpdateRequest req) {
+        // enabled가 req에 없다면: 아래 줄은 지워도 됨(그 대신 enable/disable 메서드로만 제어)
+        if (req.enabled() != null) {
+            stores.dndConfig.enabled = req.enabled();
+        }
+
+        stores.dndConfig.start = LocalTime.parse(req.startTime());
+        stores.dndConfig.end = LocalTime.parse(req.endTime());
+        stores.dndConfig.updatedAt = java.time.LocalDateTime.now();
+        return get();
     }
 
-    @Transactional
-    public Map<String, Object> enable(Long userId) {
-        UserDndConfigEntity cfg = getOrCreate(userId);
-        cfg.enable();
-        return get(userId);
+    // 금지시간 ON/OFF만 별도로 제어(컨트롤러에서 쓰기 좋음)
+    public Map<String, Object> enable() {
+        stores.dndConfig.enabled = true;
+        stores.dndConfig.updatedAt = java.time.LocalDateTime.now();
+        return get();
     }
 
-    @Transactional
-    public Map<String, Object> disable(Long userId) {
-        UserDndConfigEntity cfg = getOrCreate(userId);
-        cfg.disable();
-        return get(userId);
+    public Map<String, Object> disable() {
+        stores.dndConfig.enabled = false;
+        stores.dndConfig.updatedAt = java.time.LocalDateTime.now();
+        return get();
     }
 
-    @Transactional(readOnly = true)
-    public boolean isDndNow(Long userId) {
-        UserDndConfigEntity cfg = getOrCreate(userId);
-        if (!cfg.isEnabled()) return false;
+    public boolean isDndNow() {
+        if (!stores.dndConfig.enabled) return false; // ✅ 추가
 
         LocalTime now = LocalTime.now();
-        LocalTime start = cfg.getStartTime();
-        LocalTime end = cfg.getEndTime();
+        LocalTime start = stores.dndConfig.start;
+        LocalTime end = stores.dndConfig.end;
 
-        // 22:00~08:00 (자정 걸치는 케이스)
+        // 22:00~08:00 같이 자정 걸치는 케이스 처리
         if (start.isBefore(end)) {
             return !now.isBefore(start) && now.isBefore(end);
         } else {
@@ -73,13 +68,8 @@ public class TimeService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public Map<String, Object> queueStatus(Long userId) {
-        long cnt = messageRepository.countByUserIdAndStatus(userId, MessageStatus.DND_HOLD);
-        return Map.of("userId", userId, "queuedCount", cnt);
-    }
-
-    private UserDndConfigEntity getOrCreate(Long userId) {
-        return dndRepo.findById(userId).orElseGet(() -> dndRepo.save(new UserDndConfigEntity(userId)));
+    // 3) 금지시간 보류 큐 상태 조회
+    public Map<String, Object> queueStatus() {
+        return Map.of("queuedCount", stores.dndQueue.size());
     }
 }

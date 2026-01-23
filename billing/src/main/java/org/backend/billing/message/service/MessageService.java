@@ -1,11 +1,13 @@
 package org.backend.billing.message.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.backend.billing.common.exception.ApiException;
 import org.backend.billing.common.exception.ErrorCode;
@@ -14,387 +16,311 @@ import org.backend.billing.message.dto.request.ResendRequest;
 import org.backend.billing.message.dto.request.SendEmailRequest;
 import org.backend.billing.message.dto.request.SendPhoneRequest;
 import org.backend.billing.message.dto.request.TemplatePreviewRequest;
-import org.backend.billing.message.entity.MessageAttemptEntity;
-import org.backend.billing.message.entity.MessageEntity;
-import org.backend.billing.message.repository.MessageAttemptRepository;
-import org.backend.billing.message.repository.MessageRepository;
-import org.backend.billing.message.type.AttemptStatus;
-import org.backend.billing.message.type.MessageStatus;
-import org.backend.billing.message.type.MessageType;
+import org.backend.billing.message.service.InMemoryStores.Attempt;
+import org.backend.billing.message.service.InMemoryStores.Channel;
+import org.backend.billing.message.service.InMemoryStores.Message;
+import org.backend.billing.message.service.InMemoryStores.MessageStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class MessageService {
 
-    private final MessageRepository messageRepository;
-    private final MessageAttemptRepository attemptRepository;
+    private final InMemoryStores stores;
+    private final TimeService timeService;
     private final TemplateService templateService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public MessageService(MessageRepository messageRepository,
-                          MessageAttemptRepository attemptRepository,
-                          TemplateService templateService) {
-        this.messageRepository = messageRepository;
-        this.attemptRepository = attemptRepository;
+    public MessageService(InMemoryStores stores, TimeService timeService, TemplateService templateService) {
+        this.stores = stores;
+        this.timeService = timeService;
         this.templateService = templateService;
     }
 
-    // ===== Mock Send =====
-
-    @Transactional
+    // sms mock 발송
     public Map<String, Object> sendSmsMock(SendPhoneRequest req) {
-        // mock은 clientRequestId로 dedupKey 강제
-        String dedupKey = dedupKeyOrThrow(req.clientRequestId());
-
-        MessageEntity m = new MessageEntity(
-                0L,                // userId 없으면 0
-                0L,                // invoiceId 없으면 0 (NOT NULL 대응)
-                null,
-                MessageType.SMS,
-                req.phone(),
-                toJson(Map.of()),
-                null,
-                req.content(),
-                null,
-                UUID.randomUUID().toString(),
-                dedupKey,
-                3
-        );
-
-        messageRepository.save(m);
-        sendWithRetry(m.getId(), false, 0.0);
-        return Map.of("messageId", m.getId(), "status", m.getStatus().name());
+        dedupe(req.clientRequestId());
+        Message m = newMessage(null, Channel.SMS, req.phone(), null, Map.of(), null, req.content(), null);
+        stores.messages.put(m.id, m);
+        asyncSend(m.id, false);
+        return Map.of("messageId", m.id, "status", m.status.name());
     }
 
-    @Transactional
+    // email mock 발송
     public Map<String, Object> sendEmailMock(SendEmailRequest req) {
-        String dedupKey = dedupKeyOrThrow(req.clientRequestId());
-
-        MessageEntity m = new MessageEntity(
-                0L,
-                0L,
-                null,
-                MessageType.EMAIL,
-                req.email(),
-                toJson(Map.of()),
-                req.subject(),
-                req.content(),
-                null,
-                UUID.randomUUID().toString(),
-                dedupKey,
-                3
-        );
-
-        messageRepository.save(m);
-        sendWithRetry(m.getId(), true, 0.0);
-        return Map.of("messageId", m.getId(), "status", m.getStatus().name());
+        dedupe(req.clientRequestId());
+        Message m = newMessage(null, Channel.EMAIL, req.email(), null, Map.of(), req.subject(), req.content(), null);
+        stores.messages.put(m.id, m);
+        asyncSend(m.id, true);
+        return Map.of("messageId", m.id, "status", m.status.name());
     }
 
-    // ===== Main Send =====
-
-    @Transactional
+    // 발송 요청 생성 (즉시 or 예약)
     public Map<String, Object> createSend(MessageSendRequest req) {
-        MessageType type;
-        try {
-            type = MessageType.valueOf(req.channel().toUpperCase());
-        } catch (Exception e) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "invalid channel: " + req.channel());
-        }
+        Channel ch = Channel.valueOf(req.channel().toUpperCase());
 
         String subject = null;
-        String content;
+        String content = null;
 
         if (req.templateId() != null) {
             var preview = templateService.preview(new TemplatePreviewRequest(req.templateId(), req.variables()));
             subject = preview.get("subject");
             content = preview.get("body");
         } else {
-            content = (req.variables() != null) ? req.variables().toString() : "";
+            content = req.variables() != null ? req.variables().toString() : "";
         }
 
-        // ✅ DTO에 dedupKey가 없으므로 UUID 생성
-        String dedupKey = UUID.randomUUID().toString();
+        Message m = newMessage(req.userId(), ch, req.destination(), req.templateId(),
+                req.variables() == null ? Map.of() : req.variables(),
+                subject, content, req.scheduledAt());
 
-        MessageEntity m = new MessageEntity(
-                req.userId(),
-                0L, // ✅ invoiceId가 DTO에 없어서 0으로 저장 (원하면 DTO에 추가 추천)
-                req.templateId(),
-                type,
-                req.destination(),
-                toJson(Optional.ofNullable(req.variables()).orElse(Map.of())),
-                subject,
-                content,
-                req.scheduledAt(),
-                UUID.randomUUID().toString(),
-                dedupKey,
-                3 // ✅ maxRetry 기본값
-        );
+        stores.messages.put(m.id, m);
 
-        messageRepository.save(m);
-
-        // ✅ scheduledAt이 없거나 지금 <= 이면 즉시 발송
-        if (req.scheduledAt() == null || !req.scheduledAt().isAfter(LocalDateTime.now())) {
-            sendWithRetry(m.getId(), type == MessageType.EMAIL, 0.0);
+        if (req.scheduledAt() != null) {
+            schedule(m.id, req.scheduledAt());
+            m.status = MessageStatus.SCHEDULED;
+            touch(m);
+        } else {
+            asyncSend(m.id, ch == Channel.EMAIL);
         }
 
-        return Map.of("messageId", m.getId(), "status", m.getStatus().name());
+        return Map.of("messageId", m.id, "status", m.status.name());
     }
 
-    @Transactional(readOnly = true)
+    // 사용자 상태 조회(명세 충돌 회피용)
     public Map<String, Object> getUserStatus(Long userId) {
-        long total = messageRepository.countByUserId(userId);
-        long success = messageRepository.countByUserIdAndStatus(userId, MessageStatus.SENT);
-        long fail = messageRepository.countByUserIdAndStatus(userId, MessageStatus.FAILED);
-        long sending = messageRepository.countByUserIdAndStatus(userId, MessageStatus.SENDING);
-        return Map.of("userId", userId, "total", total, "success", success, "fail", fail, "sending", sending);
+        long total = stores.messages.values().stream().filter(x -> Objects.equals(x.userId, userId)).count();
+        long success = stores.messages.values().stream().filter(x -> Objects.equals(x.userId, userId) && x.status == MessageStatus.SUCCESS).count();
+        long fail = stores.messages.values().stream().filter(x -> Objects.equals(x.userId, userId) && x.status == MessageStatus.FAIL).count();
+        long queued = stores.messages.values().stream().filter(x -> Objects.equals(x.userId, userId) && x.status == MessageStatus.QUEUED).count();
+        return Map.of("userId", userId, "total", total, "success", success, "fail", fail, "queued", queued);
     }
 
-    @Transactional(readOnly = true)
     public List<Map<String, Object>> list() {
-        return messageRepository.findAllByOrderByCreatedAtAsc()
-                .stream().map(this::toMap).toList();
+        return stores.messages.values().stream()
+                .sorted(Comparator.comparing(x -> x.createdAt))
+                .map(this::toMap)
+                .toList();
     }
 
-    @Transactional(readOnly = true)
     public Map<String, Object> getMessage(Long messageId) {
-        MessageEntity m = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "message not found: " + messageId));
+        Message m = stores.messages.get(messageId);
+        if (m == null) throw new ApiException(ErrorCode.NOT_FOUND, "message not found: " + messageId);
         return toMap(m);
     }
 
-    @Transactional
     public Map<String, Object> cancel(Long messageId) {
-        MessageEntity m = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "message not found: " + messageId));
+        Message m = stores.messages.get(messageId);
+        if (m == null) throw new ApiException(ErrorCode.NOT_FOUND, "message not found: " + messageId);
 
-        if (m.getStatus() == MessageStatus.SENT || m.getStatus() == MessageStatus.FAILED) {
-            throw new ApiException(ErrorCode.CONFLICT, "already finished: " + m.getStatus());
+        if (m.status == MessageStatus.SUCCESS || m.status == MessageStatus.FAIL) {
+            throw new ApiException(ErrorCode.CONFLICT, "already finished: " + m.status);
         }
-        m.cancel();
-        return Map.of("messageId", m.getId(), "status", m.getStatus().name());
+
+        m.status = MessageStatus.CANCELLED;
+        touch(m);
+        return Map.of("messageId", m.id, "status", m.status.name());
     }
 
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> failures() {
-        return messageRepository.findByStatusOrderByCreatedAtAsc(MessageStatus.FAILED)
-                .stream().map(this::toMap).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> scheduledList() {
-        return messageRepository.findByScheduledAtIsNotNullOrderByScheduledAtAsc()
-                .stream().map(this::toMap).toList();
-    }
-
-    // InMemory 기반 DND flush는 제거(관리자 설정 안쓴다고 했으니 0 반환)
-    @Transactional(readOnly = true)
-    public Map<String, Object> flushDndQueue() {
-        return Map.of("flushed", 0, "queuedLeft", 0);
-    }
-
-    @Transactional(readOnly = true)
     public List<Map<String, Object>> history() {
-        List<MessageEntity> msgs = messageRepository.findAllByOrderByCreatedAtAsc();
-        List<Map<String, Object>> out = new ArrayList<>();
-        for (MessageEntity m : msgs) {
-            for (MessageAttemptEntity a : attemptRepository.findTop200ByMessageIdOrderByAttemptNoAsc(m.getId())) {
-                out.add(Map.of(
-                        "attemptId", a.getAttemptId(),
-                        "messageId", a.getMessageId(),
-                        "attemptNo", a.getAttemptNo(),
-                        "status", a.getStatus().name(),
-                        "provider", a.getProvider(),
-                        "httpStatus", a.getHttpStatus(),
-                        "createdAt", a.getCreatedAt().toString()
-                ));
-            }
+        return stores.attempts.stream()
+                .map(a -> Map.<String, Object>of(
+                        "attemptId", a.id(),
+                        "messageId", a.messageId(),
+                        "attemptNo", a.attemptNo(),
+                        "status", a.status(),
+                        "provider", a.provider(),
+                        "httpStatus", a.httpStatus(),
+                        "createdAt", a.createdAt().toString()
+                ))
+                .toList();
+    }
+
+
+
+    public List<Map<String, Object>> failures() {
+        return stores.messages.values().stream()
+                .filter(m -> m.status == MessageStatus.FAIL)
+                .map(this::toMap)
+                .toList();
+    }
+
+    // 예약 발송 목록
+    public List<Map<String, Object>> scheduledList() {
+        return stores.messages.values().stream()
+                .filter(m -> m.status == MessageStatus.SCHEDULED)
+                .map(this::toMap)
+                .toList();
+    }
+
+    // 금지시간 큐 flush
+    public Map<String, Object> flushDndQueue() {
+        int moved = 0;
+        while (true) {
+            Long id = stores.dndQueue.poll();
+            if (id == null) break;
+            Message m = stores.messages.get(id);
+            if (m == null) continue;
+            if (m.status != MessageStatus.QUEUED) continue;
+            asyncSend(m.id, m.channel == Channel.EMAIL);
+            moved++;
         }
-        return out;
+        return Map.of("flushed", moved, "queuedLeft", stores.dndQueue.size());
     }
 
-    @Transactional
+    // 이메일 실패시 SMS 대체 발송
     public Map<String, Object> resend(ResendRequest req) {
-        MessageEntity origin = messageRepository.findById(req.messageId())
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "message not found: " + req.messageId()));
+        Message origin = stores.messages.get(req.messageId());
+        if (origin == null) throw new ApiException(ErrorCode.NOT_FOUND, "message not found: " + req.messageId());
+        if (origin.channel != Channel.EMAIL) throw new ApiException(ErrorCode.BAD_REQUEST, "origin is not EMAIL");
+        if (origin.status != MessageStatus.FAIL) throw new ApiException(ErrorCode.CONFLICT, "origin status is not FAIL");
 
-        if (origin.getType() != MessageType.EMAIL) throw new ApiException(ErrorCode.BAD_REQUEST, "origin is not EMAIL");
-        if (origin.getStatus() != MessageStatus.FAILED) throw new ApiException(ErrorCode.CONFLICT, "origin status is not FAILED");
+        Message sms = newMessage(origin.userId, Channel.SMS, req.fallbackPhone(), origin.templateId, origin.variables,
+                null, "[대체발송] " + origin.content, null);
 
-        MessageEntity sms = new MessageEntity(
-                origin.getUserId(),
-                origin.getInvoiceId(),
-                origin.getTemplateId(),
-                MessageType.SMS,
-                req.fallbackPhone(),
-                origin.getVariablesJson(),
-                null,
-                "[대체발송] " + Optional.ofNullable(origin.getContent()).orElse(""),
-                null,
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(),
-                3
-        );
+        stores.messages.put(sms.id, sms);
+        asyncSend(sms.id, false);
 
-        messageRepository.save(sms);
-        sendWithRetry(sms.getId(), false, 0.0);
-
-        return Map.of("fallbackMessageId", sms.getId(), "status", sms.getStatus().name());
+        return Map.of("fallbackMessageId", sms.id, "status", sms.status.name());
     }
 
-    @Transactional
+    // /messages/send/{type}
     public Map<String, Object> sendByType(String type, MessageSendRequest req) {
         String ch = type.toUpperCase();
         MessageSendRequest fixed = new MessageSendRequest(req.userId(), ch, req.destination(), req.templateId(), req.variables(), req.scheduledAt());
         return createSend(fixed);
     }
 
-    @Transactional
+    // /messages/error (이메일 1% 실패 테스트)
     public Map<String, Object> emailErrorTest(SendEmailRequest req) {
-        String dedupKey = dedupKeyOrThrow(req.clientRequestId());
-
-        MessageEntity m = new MessageEntity(
-                0L, 0L, null,
-                MessageType.EMAIL,
-                req.email(),
-                toJson(Map.of()),
-                req.subject(),
-                req.content(),
-                null,
-                UUID.randomUUID().toString(),
-                dedupKey,
-                3
-        );
-        messageRepository.save(m);
-
-        // 이메일 1% 실패
-        sendWithRetry(m.getId(), true, 0.01);
-
-        return Map.of("messageId", m.getId(), "status", m.getStatus().name());
+        dedupe(req.clientRequestId());
+        Message m = newMessage(null, Channel.EMAIL, req.email(), null, Map.of(), req.subject(), req.content(), null);
+        stores.messages.put(m.id, m);
+        asyncSend(m.id, true); // failRate는 retryPolicy.emailFailRate 사용
+        return Map.of("messageId", m.id, "status", m.status.name());
     }
 
-    // ===== 내부 발송(Mock) =====
+    // ====== INTERNAL ======
 
-    private void sendWithRetry(Long messageId, boolean isEmail, double emailFailRate) {
-        MessageEntity m = messageRepository.findById(messageId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "message not found: " + messageId));
+    private void schedule(Long messageId, LocalDateTime when) {
+        long delayMs = Math.max(0, Duration.between(LocalDateTime.now(), when).toMillis());
+        stores.scheduler.schedule(() -> asyncSend(messageId, true), delayMs, TimeUnit.MILLISECONDS);
+    }
 
-        if (m.getStatus() == MessageStatus.CANCELED) return;
+    private void asyncSend(Long messageId, boolean isEmail) {
+        stores.asyncExecutor.submit(() -> sendWithRetry(messageId, isEmail));
+    }
 
-        if (m.getScheduledAt() != null && m.getScheduledAt().isAfter(LocalDateTime.now())) {
+    private void sendWithRetry(Long messageId, boolean isEmail) {
+        Message m = stores.messages.get(messageId);
+        if (m == null) return;
+        if (m.status == MessageStatus.CANCELLED) return;
+
+        // 금지시간이면 큐로
+        if (timeService.isDndNow()) {
+            m.status = MessageStatus.QUEUED;
+            touch(m);
+            stores.dndQueue.add(m.id);
             return;
         }
 
-        m.markSending();
+        m.status = MessageStatus.SENDING;
+        touch(m);
 
-        int maxAttempts = m.getMaxRetry();
-        for (int attemptNo = 1; attemptNo <= maxAttempts; attemptNo++) {
+        var policy = stores.retryPolicy;
+        long delay = policy.baseDelayMillis;
 
-            recordAttempt(m.getId(), attemptNo, AttemptStatus.ATTEMPTING, providerOf(m.getType()), 0);
+        for (int attemptNo = 1; attemptNo <= policy.maxAttempts; attemptNo++) {
+            if (m.status == MessageStatus.CANCELLED) return;
+
+            recordAttempt(m.id, attemptNo, "ATTEMPTING", providerOf(m.channel), 0);
+
+            // 1초 딜레이(요구사항 반영)
             sleep(1000);
 
-            boolean ok = simulateProvider(isEmail, emailFailRate);
+            boolean ok = simulateProvider(isEmail, policy.emailFailRate);
 
             if (ok) {
-                recordAttempt(m.getId(), attemptNo, AttemptStatus.SUCCESS, providerOf(m.getType()), 200);
-                m.markSent();
+                recordAttempt(m.id, attemptNo, "SUCCESS", providerOf(m.channel), 200);
+                m.status = MessageStatus.SUCCESS;
+                touch(m);
                 return;
             } else {
-                recordAttempt(m.getId(), attemptNo, AttemptStatus.FAIL, providerOf(m.getType()), 500);
-                m.incRetry();
-                if (attemptNo == maxAttempts) {
-                    m.markFailed();
+                recordAttempt(m.id, attemptNo, "FAIL", providerOf(m.channel), 500);
+                if (attemptNo == policy.maxAttempts) {
+                    m.status = MessageStatus.FAIL;
+                    touch(m);
                     return;
                 }
-                sleep(300L * attemptNo);
+                sleep(delay);
+                delay = (long) (delay * policy.backoffMultiplier);
             }
         }
     }
 
     private boolean simulateProvider(boolean isEmail, double emailFailRate) {
-        if (!isEmail) return true;
+        // emailFailRate (ex 0.01) 실패 확률
+        if (!isEmail) return true; // SMS/PUSH는 mock에선 성공 처리
         return Math.random() >= emailFailRate;
     }
 
-    private String providerOf(MessageType type) {
-        return switch (type) {
+    private String providerOf(Channel ch) {
+        return switch (ch) {
             case EMAIL -> "mock-smtp";
             case SMS -> "mock-sms-gw";
             case PUSH -> "mock-push";
-            case ETC -> "mock-etc";
         };
     }
 
-    private void recordAttempt(Long messageId, int attemptNo, AttemptStatus status, String provider, int httpStatus) {
-        MessageAttemptEntity a = new MessageAttemptEntity(
-                messageId,
-                attemptNo,
-                status,
-                provider,
-                "prov-" + UUID.randomUUID(),
-                null,
-                httpStatus,
-                status == AttemptStatus.FAIL ? "PROVIDER_ERROR" : null,
-                status == AttemptStatus.FAIL ? "Mock provider failed" : null,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-        attemptRepository.save(a);
+    private void recordAttempt(Long messageId, int attemptNo, String status, String provider, int httpStatus) {
+        long id = stores.attemptSeq.incrementAndGet();
+        stores.attempts.add(new Attempt(
+                id, messageId, attemptNo, status, provider,
+                "prov-" + UUID.randomUUID(), httpStatus, LocalDateTime.now()
+        ));
+    }
+
+    private Message newMessage(Long userId, Channel ch, String dest, Long templateId,
+                               Map<String, String> vars, String subject, String content, LocalDateTime scheduledAt) {
+        long id = stores.messageSeq.incrementAndGet();
+        Message m = new Message(id);
+        m.userId = userId;
+        m.channel = ch;
+        m.destination = dest;
+        m.templateId = templateId;
+        m.variables = vars;
+        m.subject = subject;
+        m.content = content;
+        m.status = MessageStatus.REQUESTED;
+        m.scheduledAt = scheduledAt;
+        m.createdAt = LocalDateTime.now();
+        m.updatedAt = m.createdAt;
+        return m;
+    }
+
+    private void touch(Message m) {
+        m.updatedAt = LocalDateTime.now();
     }
 
     private void sleep(long ms) {
         try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
     }
 
-    private String toJson(Object o) {
-        try { return objectMapper.writeValueAsString(o); }
-        catch (Exception e) { return "{}"; }
+    private void dedupe(String clientRequestId) {
+        if (clientRequestId == null || clientRequestId.isBlank()) return;
+        Long prev = stores.dedupe.putIfAbsent(clientRequestId, -1L);
+        if (prev != null) throw new ApiException(ErrorCode.CONFLICT, "duplicate request: " + clientRequestId);
     }
 
-    private String dedupKeyOrThrow(String clientRequestId) {
-        if (clientRequestId == null || clientRequestId.isBlank()) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "clientRequestId is required");
-        }
-        if (messageRepository.findByDedupKey(clientRequestId).isPresent()) {
-            throw new ApiException(ErrorCode.CONFLICT, "duplicate request: " + clientRequestId);
-        }
-        return clientRequestId;
-    }
-    @Transactional
-    public Map<String, Object> flushDndHold(Long userId) {
-        List<MessageEntity> targets =
-                messageRepository.findTop200ByUserIdAndStatusOrderByCreatedAtAsc(userId, MessageStatus.DND_HOLD);
-
-        for (MessageEntity m : targets) {
-            m.releaseDndHold(); // DND_HOLD -> PENDING, availableAt=now
-        }
-
-        long left = messageRepository.countByUserIdAndStatus(userId, MessageStatus.DND_HOLD);
-
+    private Map<String, Object> toMap(Message m) {
         return Map.of(
-                "userId", userId,
-                "flushed", targets.size(),
-                "queuedLeft", left
+                "id", m.id,
+                "userId", m.userId,
+                "channel", m.channel.name(),
+                "destination", m.destination,
+                "templateId", m.templateId,
+                "status", m.status.name(),
+                "scheduledAt", m.scheduledAt == null ? null : m.scheduledAt.toString(),
+                "createdAt", m.createdAt.toString(),
+                "updatedAt", m.updatedAt.toString()
         );
-    }
-    
-    private Map<String, Object> toMap(MessageEntity m) {
-        Map<String, Object> out = new java.util.LinkedHashMap<>();
-        out.put("id", m.getId());
-        out.put("userId", m.getUserId());
-        out.put("invoiceId", m.getInvoiceId());
-        out.put("type", m.getType().name());
-        out.put("destination", m.getDestination());
-        out.put("templateId", m.getTemplateId());
-        out.put("status", m.getStatus().name());
-
-        out.put("scheduledAt", m.getScheduledAt() == null ? null : m.getScheduledAt().toString());
-        out.put("sentAt", m.getSentAt() == null ? null : m.getSentAt().toString());
-        out.put("createdAt", m.getCreatedAt() == null ? null : m.getCreatedAt().toString());
-        out.put("updatedAt", m.getUpdatedAt() == null ? null : m.getUpdatedAt().toString());
-
-        return out;
     }
 }
