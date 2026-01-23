@@ -26,6 +26,7 @@ public class QuartzConfig {
                 .forJob(billingJobDetail)
                 .withIdentity("billingTrigger","batchGroup")
                 .withSchedule(CronScheduleBuilder.cronSchedule("0 30 0 1 * ?"))
+//                .withSchedule(CronScheduleBuilder.cronSchedule("0 30 0 1 * ?"))
                 .build();
     }
 
