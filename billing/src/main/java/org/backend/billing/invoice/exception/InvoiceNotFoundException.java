@@ -1,4 +1,4 @@
-package org.backend.billingbatch.exception;
+package org.backend.billing.invoice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

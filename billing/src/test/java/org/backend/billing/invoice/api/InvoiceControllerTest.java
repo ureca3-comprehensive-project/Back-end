@@ -1,5 +1,6 @@
-package org.backend.billingbatch.api;
+package org.backend.billing.invoice.api;
 
+import org.backend.core.port.InvoiceBatchPort;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.invoice.entity.Invoice;
 import org.backend.domain.invoice.repository.InvoiceRepository;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,9 @@ public class InvoiceControllerTest {
 
     @Autowired
     private InvoiceRepository invoiceRepository;
+
+    @MockitoBean
+    private InvoiceBatchPort invoiceBatchPort;
 
     private List<Invoice> savedInvoices;
 
@@ -115,15 +120,6 @@ public class InvoiceControllerTest {
     @Test
     @DisplayName("존재하지 않는 청구서 조회 시 예외 발생 확인")
     void getInvoiceNotFoundTest() throws Exception {
-        // GlobalExceptionHandler 없어도 되는 버전
-//        assertThatThrownBy(() -> {
-//            mockMvc.perform(get("/billing/bills/{billId}", 99999L));
-//        }).isInstanceOf(ServletException.class) // MockMvc가 예외를 ServletException으로 한 번 감쌉니다.
-//                .hasCauseInstanceOf(IllegalArgumentException.class) // 실제 원인은 IllegalArgumentException
-//                .hasMessageContaining("청구서가 존재하지 않습니다. id=99999");
-
-
-        // Given: 기대하는 상태와 메시지 정의
         HttpStatus expectedStatus = HttpStatus.NOT_FOUND; // 404
         String expectedMessage = "청구서가 존재하지 않습니다. id=99999";
 

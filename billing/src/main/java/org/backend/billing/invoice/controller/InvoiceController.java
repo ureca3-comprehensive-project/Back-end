@@ -1,10 +1,10 @@
-package org.backend.billingbatch.controller;
+package org.backend.billing.invoice.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.dto.InvoiceDetailResponse;
-import org.backend.billingbatch.dto.InvoiceResponse;
+import org.backend.billing.invoice.dto.InvoiceDetailResponse;
+import org.backend.billing.invoice.dto.InvoiceResponse;
 import org.backend.domain.invoice.entity.Invoice;
-import org.backend.billingbatch.services.InvoiceService;
+import org.backend.billing.invoice.services.InvoiceService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;

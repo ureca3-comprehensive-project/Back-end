@@ -2,8 +2,6 @@ package org.backend.billingbatch.job;
 
 import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.dto.InvoiceDto;
-import org.backend.domain.invoice.entity.Invoice;
-import org.backend.domain.message.entity.Message;
 import org.backend.domain.message.repository.MessageRepository;
 import org.backend.domain.message.type.ChannelType;
 import org.backend.domain.message.type.MessageStatus;

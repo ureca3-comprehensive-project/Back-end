@@ -1,4 +1,4 @@
-package org.backend.billingbatch.dto;
+package org.backend.billing.invoice.dto;
 
 import lombok.Builder;
 import lombok.Getter;

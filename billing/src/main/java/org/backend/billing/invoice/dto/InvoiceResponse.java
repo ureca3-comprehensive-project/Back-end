@@ -1,4 +1,4 @@
-package org.backend.billingbatch.dto;
+package org.backend.billing.invoice.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

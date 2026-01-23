@@ -1,4 +1,4 @@
-package org.backend.billingbatch.api;
+package org.backend.billing.invoice.api;
 
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.billing.repository.BillingHistoryRepository;

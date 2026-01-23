@@ -1,9 +1,10 @@
-package org.backend.billingbatch.services;
+package org.backend.billing.invoice.services;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.dto.InvoiceDetailResponse;
-import org.backend.billingbatch.dto.InvoiceResponse;
+import org.backend.billing.invoice.dto.InvoiceDetailResponse;
+import org.backend.billing.invoice.dto.InvoiceResponse;
 
+import org.backend.billing.invoice.exception.InvoiceNotFoundException;
 import org.backend.domain.invoice.repository.InvoiceDetailRepository;
 import org.backend.domain.invoice.repository.InvoiceRepository;
 import org.backend.domain.invoice.entity.Invoice;
@@ -30,7 +31,7 @@ public class InvoiceService {
     // 단건 조회
     public Invoice findById(Long invoiceId) {
         return invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new IllegalArgumentException("청구서가 존재하지 않습니다. id=" + invoiceId));
+                .orElseThrow(() -> new InvoiceNotFoundException("청구서가 존재하지 않습니다. id=" + invoiceId));
     }
 
     // 월별 일괄 삭제
@@ -44,14 +45,14 @@ public class InvoiceService {
     @Transactional
     public void deleteInvoice(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 청구서입니다."));
+                .orElseThrow(() -> new InvoiceNotFoundException("존재하지 않는 청구서입니다."));
         invoiceRepository.deleteById(invoiceId);
     }
 
     public InvoiceResponse getInvoiceByUniqueKey(Long lineId, String billingMonth) {
         return invoiceRepository.findByLineIdAndBillingMonth(lineId, billingMonth)
                 .map(InvoiceResponse::fromEntity)
-                .orElseThrow(() -> new IllegalArgumentException("청구서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new InvoiceNotFoundException("청구서를 찾을 수 없습니다."));
     }
 
     public List<InvoiceDetailResponse> getInvoiceDetails(Long invoiceId) {

@@ -1,7 +1,7 @@
 package org.backend.billingbatch.services;
 
 import lombok.RequiredArgsConstructor;
-import org.backend.billingbatch.dto.LockStatusResponse;
+import org.backend.core.dto.LockStatusResponse;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.repository.explore.JobExplorer;
 import org.springframework.stereotype.Service;
@@ -38,3 +38,4 @@ public class LockService {
                 .build();
     }
 }
+

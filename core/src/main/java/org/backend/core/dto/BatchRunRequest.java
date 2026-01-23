@@ -1,4 +1,4 @@
-package org.backend.billingbatch.dto;
+package org.backend.core.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

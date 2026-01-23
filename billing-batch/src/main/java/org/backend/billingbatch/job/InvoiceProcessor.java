@@ -3,16 +3,10 @@ package org.backend.billingbatch.job;
 import lombok.RequiredArgsConstructor;
 import org.backend.billingbatch.dto.InvoiceDto;
 import org.backend.domain.billing.entity.BillingHistory;
-import org.backend.domain.invoice.entity.Invoice;
-import org.backend.domain.invoice.entity.InvoiceDetail;
-import org.backend.domain.invoice.type.InvoiceStatus;
-import org.backend.domain.line.entity.Line;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 // 금액 계산 로직
 @Component

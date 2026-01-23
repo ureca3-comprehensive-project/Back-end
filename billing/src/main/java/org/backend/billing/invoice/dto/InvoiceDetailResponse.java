@@ -1,4 +1,4 @@
-package org.backend.billingbatch.dto;
+package org.backend.billing.invoice.dto;
 
 import lombok.*;
 import org.backend.domain.invoice.entity.InvoiceDetail;
