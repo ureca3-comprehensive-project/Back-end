@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin · Dashboard</title>
+  <link rel="stylesheet" href="/admin/assets/styles.css"/>
+</head>
+<body data-page="dashboard">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div class="brand-title">U+ Billing Admin</div>
+          <div class="brand-sub">Operations Console</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="./index.html" data-page="dashboard"><span class="dot"></span>대시보드</a>
+        <a href="./billing.html" data-page="billing"><span class="dot"></span>요금 명세서</a>
+        <a href="./messages.html" data-page="messages"><span class="dot"></span>메시지 발송 이력</a>
+        <a href="./templates.html" data-page="templates"><span class="dot"></span>메시지 템플릿</a>
+        <a href="./batch.html" data-page="batch"><span class="dot"></span>배치 실행/이력</a>
+        <a href="./monitoring.html" data-page="monitoring"><span class="dot"></span>장애/실패 모니터링</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="h1">대시보드</div>
+          <div class="desc">운영 현황을 한눈에 파악합니다.</div>
+        </div>
+        <div class="actions">
+          <div id="metaPill" class="pill"></div>
+        </div>
+      </div>
+
+      <section class="grid kpi">
+        <div class="card">
+          <h3>오늘 생성된 요금 명세서</h3>
+          <div id="kpiBilling" class="kpi-num">-</div>
+          <div class="kpi-meta">Billing Statements Today</div>
+        </div>
+        <div class="card">
+          <h3>메시지 성공</h3>
+          <div id="kpiSuccess" class="kpi-num">-</div>
+          <div class="kpi-meta">Message SUCCESS</div>
+        </div>
+        <div class="card">
+          <h3>메시지 실패</h3>
+          <div id="kpiFail" class="kpi-num">-</div>
+          <div class="kpi-meta">Message FAIL</div>
+        </div>
+        <div class="card">
+          <h3>배치 처리 상태</h3>
+          <div id="batchBadge"></div>
+          <div id="batchMeta" class="kpi-meta" style="margin-top:10px">-</div>
+        </div>
+      </section>
+
+      <section class="grid two" style="margin-top:12px;">
+        <div class="card">
+          <h3>채널별 발송 비율</h3>
+          <div class="chartbar">
+            <div class="bar">
+              <b>EMAIL</b>
+              <i id="barEmail" style="height:0%"></i>
+              <em id="barEmailVal">0%</em>
+            </div>
+            <div class="bar">
+              <b>SMS</b>
+              <i id="barSms" style="height:0%"></i>
+              <em id="barSmsVal">0%</em>
+            </div>
+            <div class="bar">
+              <b>PUSH</b>
+              <i id="barPush" style="height:0%"></i>
+              <em id="barPushVal">0%</em>
+            </div>
+          </div>
+          <div class="small">백엔드에서 채널 비율(%)을 내려주면 자동 반영됩니다.</div>
+        </div>
+
+        <div class="card">
+          <h3>최근 메시지 실패 내역</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>MessageId</th><th>Channel</th><th>Provider</th><th>Status</th><th>ErrorCode</th><th>At</th>
+              </tr>
+            </thead>
+            <tbody id="recentFailTbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 공통 모달 -->
+  <div id="modal" class="modal">
+    <div class="box">
+      <div class="head">
+        <div id="modalTitle" style="font-weight:900">상세</div>
+        <button id="modalClose" class="btn ghost">닫기</button>
+      </div>
+      <div id="modalBody" class="body"></div>
+      <div class="foot">
+        <button id="modalCancel" class="btn">확인</button>
+        <button id="modalSave" class="btn primary" style="display:none;">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

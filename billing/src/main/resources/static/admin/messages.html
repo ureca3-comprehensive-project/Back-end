@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin · Messages</title>
+  <link rel="stylesheet" href="/admin/assets/styles.css"/>
+
+</head>
+<body data-page="messages">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div class="brand-title">U+ Billing Admin</div>
+          <div class="brand-sub">Message Delivery History</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="./index.html" data-page="dashboard"><span class="dot"></span>대시보드</a>
+        <a href="./billing.html" data-page="billing"><span class="dot"></span>요금 명세서</a>
+        <a href="./messages.html" data-page="messages"><span class="dot"></span>메시지 발송 이력</a>
+        <a href="./templates.html" data-page="templates"><span class="dot"></span>메시지 템플릿</a>
+        <a href="./batch.html" data-page="batch"><span class="dot"></span>배치 실행/이력</a>
+        <a href="./monitoring.html" data-page="monitoring"><span class="dot"></span>장애/실패 모니터링</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="h1">메시지 발송 이력 (핵심)</div>
+          <div class="desc">처리 흐름/재시도 구조/비동기 설계를 설명하는 메인 화면</div>
+        </div>
+        <div class="actions">
+          <div id="metaPill" class="pill"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>필터</h3>
+        <div class="form">
+          <div class="field">
+            <label>Status</label>
+            <select id="mStatus">
+              <option value="">ALL</option>
+              <option>SUCCESS</option>
+              <option>FAIL</option>
+              <option>RETRY</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Channel</label>
+            <select id="mChannel">
+              <option value="">ALL</option>
+              <option>EMAIL</option>
+              <option>SMS</option>
+              <option>PUSH</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:260px;">
+            <label>검색(수신자/메시지ID/템플릿ID 등)</label>
+            <input id="mQ" class="input" placeholder="예) 5001 또는 user@test.com"/>
+          </div>
+          <button id="mSearchBtn" class="btn primary">조회</button>
+          <button id="mResetBtn" class="btn">초기화</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>목록 (행 클릭 시 상세)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Status</th><th>Channel</th><th>Provider</th><th>To</th><th>TemplateId</th><th>CreatedAt</th>
+            </tr>
+          </thead>
+          <tbody id="msgTbody"></tbody>
+        </table>
+        <div class="small">상세 모달에서 attempts(시도 이력) + provider 응답 코드 + nextRetryAt 등을 보여주면 “재시도/비동기 설계” 설명이 매우 쉬워집니다.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 공통 모달 -->
+  <div id="modal" class="modal">
+    <div class="box">
+      <div class="head">
+        <div id="modalTitle" style="font-weight:900">상세</div>
+        <button id="modalClose" class="btn ghost">닫기</button>
+      </div>
+      <div id="modalBody" class="body"></div>
+      <div class="foot">
+        <button id="modalCancel" class="btn">닫기</button>
+        <button id="modalSave" class="btn primary" style="display:none;">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

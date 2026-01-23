@@ -1,6 +1,6 @@
 package org.backend.billing;
 
-import org.backend.billing.message.service.InMemoryStores;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -20,9 +20,6 @@ public class BillingApplication {
         SpringApplication.run(BillingApplication.class, args);
     }
 
-    @Bean
-    public InMemoryStores inMemoryStores() {
-        return new InMemoryStores();
-    }
+
 }
 
