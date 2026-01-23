@@ -3,11 +3,11 @@ const API_BASE = ""; // 같은 서버면 빈 문자열. 분리 배포면 "http:/
 
 // 엔드포인트는 "당신의 백엔드 경로"에 맞게 여기만 조정하면 됩니다.
 const EP = {
-  dashboard: "/api/admin/dashboard",
+  dashboard: "/billing/bills/statistics",
   recentFailures: "/api/admin/messages/recent-failures",
 
-  billingList: "/api/admin/billing-statements",
-  billingDetail: (id) => `/api/admin/billing-statements/${id}`,
+  billingList: "/billing/bills",
+  billingDetail: (id) => `/billing/bills/${id}`,
 
   msgList: "/api/admin/messages",
   msgDetail: (id) => `/api/admin/messages/${id}`,
@@ -18,8 +18,8 @@ const EP = {
   tplDelete: (id) => `/messages/template/${id}`,
   tplPreview: "/messages/template/preview", // 없다면 백엔드에 맞춰 변경
 
-  batchRuns: "/api/admin/batch/runs",
-  batchTrigger: "/api/admin/batch/run",
+  batchRuns: "/billing/invoices/runs",
+  batchTrigger: "/billing/invoices/manual",
 
   failList: "/api/admin/monitor/failures",
   failSummary: "/api/admin/monitor/failures/summary",
@@ -44,6 +44,11 @@ function fmtDt(s){
 }
 function badge(status){
   const s = String(status || "").toUpperCase();
+  if (["COMPLETED"].includes(s)) return `<span class="badge good">COMPLETED</span>`;
+  if (["FAILED", "ABANDONED"].includes(s)) return `<span class="badge bad">${s}</span>`;
+  if (["STARTED", "STARTING", "RUNNING"].includes(s)) return `<span class="badge warn">RUNNING</span>`;
+  if (["STOPPING", "STOPPED"].includes(s)) return `<span class="badge brand">${s}</span>`;
+
   if (["SUCCESS","OK","SENT"].includes(s)) return `<span class="badge good">SUCCESS</span>`;
   if (["FAIL","FAILED","ERROR"].includes(s)) return `<span class="badge bad">FAIL</span>`;
   if (["RETRY","RETRYING","PENDING"].includes(s)) return `<span class="badge warn">${s}</span>`;
@@ -475,33 +480,124 @@ async function loadTemplates(){
 }
 
 async function loadBatch(){
-  async function query(){
-    let runs;
-    try{ runs = unwrap(await fetchJson(EP.batchRuns)); }
-    catch(e){ runs = mock.batchRuns; }
+  // 경과 시간 출력
+  function calcDuration(startStr, endStr) {
+    if (!startStr) return "00:00:00";
+    const start = new Date(startStr).getTime();
+    const end = endStr ? new Date(endStr).getTime() : Date.now();
+    const diff = Math.max(0, end - start);
 
-    $("#batchTbody").innerHTML = (runs||[]).map(r=>`
-      <tr>
-        <td>${r.id||"-"}</td>
-        <td>${r.job||"-"}</td>
-        <td>${badge(r.status)}</td>
-        <td class="small">${fmtDt(r.startedAt)}</td>
-        <td class="small">${fmtDt(r.endedAt)}</td>
-      </tr>
-    `).join("") || `<tr><td colspan="5" class="small">실행 이력이 없습니다.</td></tr>`;
+    const s = Math.floor((diff / 1000) % 60);
+    const m = Math.floor((diff / 1000 / 60) % 60);
+    const h = Math.floor(diff / (1000 * 60 * 60));
+
+    // (05:03:01) 형태
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
-  $("#batchRunBtn").onclick = async ()=>{
+  // 배치 이력 조회 함수
+  async function query(){
+    let runs;
     try{
-      await fetchJson(EP.batchTrigger, {method:"POST", body: JSON.stringify({ job: $("#batchJob").value })});
-      alert("배치 실행 요청 완료");
-    }catch(e){
-      alert("배치 실행(데모): 백엔드 엔드포인트 연결 전입니다.");
+      // 백엔드 API 호출
+      const response = await fetchJson(`${EP.batchRuns}?offset=0&limit=20`);
+      // 응답이 Array인지 Page 객체인지 체크하여 배열 추출
+      runs = Array.isArray(response) ? response : (response.data || response.content || []);
+    } catch(e) {
+      console.error("이력 조회 실패:", e);
+      runs = [];
     }
-    query();
+
+    $("#batchTbody").innerHTML = (runs||[]).map(r => {
+        const isRunning = ['RUNNING', 'STARTED', 'STARTING'].includes(r.status);
+        const isFailed = ['FAILED', 'ABANDONED', 'STOPPED'].includes(r.status);
+
+        // 스타일 & 아이콘 결정
+        let style = "color:#6b7280;"; // 기본 회색 (완료됨)
+        let icon = "✅";             // 기본 체크
+
+        if (isRunning) {
+            style = "color:#2563eb; font-weight:bold;"; // 파란색 (진행중)
+            icon = "⚡";
+        } else if (isFailed) {
+            style = "color:#dc2626; font-weight:bold;"; // 빨간색 (실패)
+            icon = "❌";
+        }
+
+        const subInfo = `
+           <div class="small" style="${style} margin-top:4px;">
+             ${icon} ${fmt(r.writeCount)}건 <br>
+             (${calcDuration(r.startTime, r.endTime)})
+           </div>
+           ${isFailed ? `<div class="small text-danger" style="margin-top:2px;">${r.exitCode}</div>` : ''}
+        `;
+      return `
+      <tr>
+        <td>${r.jobExecutionId || "-"}</td>
+        <td>
+            <b>${r.jobName || "-"}</b>
+            <div class="small text-muted">${r.billingMonth || "-"}</div>
+        </td>
+        <td>
+            ${badge(r.status)}
+            ${subInfo}
+        </td>
+        <td class="small">${fmtDt(r.startTime)}</td>
+        <td class="small">${fmtDt(r.endTime)}</td>
+      </tr>
+    `}).join("") || `<tr><td colspan="5" class="small">실행 이력이 없습니다.</td></tr>`;
+  }
+
+  // 배치 실행 버튼 클릭 이벤트 핸들러
+  $("#batchRunBtn").onclick = async () => {
+    const jobName = $("#batchJob").value;
+    const dateInput = $("#batchMonth").value;
+
+    if(!dateInput) {
+        alert("Billing Month(YYYY-MM)를 입력해주세요.");
+        return;
+    }
+
+    if(!confirm(`${dateInput} 기준 [${jobName}] 배치를 실행하시겠습니까?`)) return;
+
+    try {
+      // Case A: 이번 달 정산 (BillingBatch) -> /billing/runs
+      if (jobName === "billingJob") {
+          // YYYY-MM -> YYYYMM 형식으로 변환 필요
+          const targetDate = dateInput.replace(/-/g, "");
+
+          await fetchJson("/billing/runs", { // EP.batchRuns와 다름 주의 (직접 경로 사용하거나 EP에 추가)
+              method: "POST",
+              body: JSON.stringify({ targetDate: targetDate })
+          });
+      }
+      // Case B: 청구서 생성 (InvoiceBatch) -> /billing/invoices/manual
+      else {
+          await fetchJson(EP.batchTrigger, {
+              method: "POST",
+              body: JSON.stringify({
+                  jobName: jobName,
+                  billingMonth: dateInput, // YYYY-MM 형식 유지
+                  isForced: false
+              })
+          });
+      }
+
+      alert("✅ 배치 실행이 요청되었습니다.");
+
+      // 목록 갱신 (비동기 실행이므로 즉시 반영 안 될 수 있어 약간 지연)
+      setTimeout(query, 1000);
+
+    } catch(e) {
+      console.error(e);
+      alert("❌ 배치 실행 실패:\n" + e.message);
+    }
   };
 
+  // 초기 화면 진입 시 이력 조회 실행
   query();
+  if(window.batchInterval) clearInterval(window.batchInterval);
+  window.batchInterval = setInterval(query, 3000);
 }
 
 async function loadMonitoring(){
