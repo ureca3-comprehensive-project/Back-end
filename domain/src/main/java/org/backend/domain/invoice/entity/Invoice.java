@@ -52,7 +52,6 @@ public class Invoice extends BaseEntity{
 	@JoinColumn(name = "billing_id", nullable = false)
 	private BillingHistory billingHistory;
 
-
     @Column(length = 7, name = "billing_month")
     private String billingMonth;
     
@@ -73,6 +72,5 @@ public class Invoice extends BaseEntity{
     public void addDetail(InvoiceDetail detail) {
         this.details.add(detail);
     }
-	
 
 }
