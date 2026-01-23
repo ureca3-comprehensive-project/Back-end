@@ -23,11 +23,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "template")
+@Table(name = "Template")
 public class Template extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "template_id")
 	private Integer id;
 	
 	@Enumerated(EnumType.STRING)
@@ -39,7 +40,7 @@ public class Template extends BaseEntity {
 	private String title;
 
 	@Lob
-	@Column(name = "body", nullable = false)
+	@Column(name = "body", nullable = false,  columnDefinition = "LONGTEXT")
 	private String body;
 	
 	

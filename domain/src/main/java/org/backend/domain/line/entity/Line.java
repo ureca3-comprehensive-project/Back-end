@@ -30,13 +30,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "line",
+@Table(name = "Line",
         indexes = {
                 @Index(name = "idx_line_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_plan_id", columnList = "plan_id"),
                 @Index(name = "idx_line_due_date_id", columnList = "due_date_id")
         })
-public class Line extends BaseEntity {
+public class Line {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

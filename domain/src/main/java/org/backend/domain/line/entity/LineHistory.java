@@ -22,12 +22,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "line_history",
+@Table(name = "LineHistory",
         indexes = {
                 @Index(name = "idx_line_history_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_history_plan_id", columnList = "plan_id")
         })
-public class LineHistory extends BaseEntity {
+public class LineHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +43,6 @@ public class LineHistory extends BaseEntity {
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date")
     private LocalDate endDate;
 }

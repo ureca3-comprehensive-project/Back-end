@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "message_attempt")
+@Table(name = "MessageAttempt")
 public class MessageAttempt extends BaseEntity {
 	
 	@Id

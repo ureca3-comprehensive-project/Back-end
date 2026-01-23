@@ -35,7 +35,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "invoice",
+@Table(name = "Invoice",
         indexes = {
         		@Index(name = "idx_invoice_line_id", columnList = "line_id"),
         		@Index(name = "idx_invoice_billing_month", columnList = "billing_month"),
@@ -53,7 +53,7 @@ public class Invoice extends BaseEntity{
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "billing_id", nullable = false)
-	private BillingHistory billing;
+	private BillingHistory billingHistory;
 
     @Column(length = 7, name = "billing_month")
     private String billingMonth;

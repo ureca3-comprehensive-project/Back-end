@@ -7,6 +7,4 @@ public enum MessageStatus {
 	SENT,
 	FAILED,
 	DND_HOLD
-	
-
 }
