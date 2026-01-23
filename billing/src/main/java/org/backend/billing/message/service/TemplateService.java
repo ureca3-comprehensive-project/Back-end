@@ -1,102 +1,94 @@
 package org.backend.billing.message.service;
 
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.billing.common.exception.ApiException;
 import org.backend.billing.common.exception.ErrorCode;
 import org.backend.billing.message.dto.request.TemplateCreateRequest;
 import org.backend.billing.message.dto.request.TemplatePreviewRequest;
 import org.backend.billing.message.dto.request.TemplateUpdateRequest;
-import org.backend.billing.message.service.InMemoryStores.Channel;
-import org.backend.billing.message.service.InMemoryStores.Template;
+import org.backend.billing.message.entity.TemplateEntity;
+import org.backend.billing.message.repository.TemplateRepository;
+import org.backend.billing.message.type.MessageType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TemplateService {
 
-    private final InMemoryStores stores;
+    private final TemplateRepository templateRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TemplateService(InMemoryStores stores) {
-        this.stores = stores;
+    public TemplateService(TemplateRepository templateRepository) {
+        this.templateRepository = templateRepository;
     }
 
-    public Template create(TemplateCreateRequest req) {
-        Channel ch = parseChannel(req.channel());
-        Long id = stores.templateSeq.incrementAndGet();
-        LocalDateTime now = LocalDateTime.now();
+    @Transactional
+    public TemplateEntity create(TemplateCreateRequest req) {
+        MessageType type = parseType(req.channel());
+        String allowedJson = toJson(Optional.ofNullable(req.allowedVariables()).orElse(List.of()));
 
-        Template t = new Template(
-                id,
+        TemplateEntity t = new TemplateEntity(
                 req.name(),
-                ch,
+                type,
                 req.subjectTemplate(),
                 req.bodyTemplate(),
-                Optional.ofNullable(req.allowedVariables()).orElse(List.of()),
-                1,
-                now,
-                now
+                allowedJson
         );
-        stores.templates.put(id, t);
+        return templateRepository.save(t);
+    }
+
+    @Transactional
+    public TemplateEntity update(TemplateUpdateRequest req) {
+        TemplateEntity t = templateRepository.findById(req.templateId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "template not found: " + req.templateId()));
+
+        String allowedJson = (req.allowedVariables() == null) ? null : toJson(req.allowedVariables());
+
+        // ✅ UpdateRequest엔 channel이 없으므로 type은 유지
+        t.update(req.name(), req.subjectTemplate(), req.bodyTemplate(), allowedJson);
         return t;
     }
 
-    public Template update(TemplateUpdateRequest req) {
-        Template old = stores.templates.get(req.templateId());
-        if (old == null) throw new ApiException(ErrorCode.NOT_FOUND, "template not found: " + req.templateId());
-
-        Template updated = new Template(
-                old.id(),
-                req.name() != null ? req.name() : old.name(),
-                old.channel(),
-                req.subjectTemplate() != null ? req.subjectTemplate() : old.subjectTemplate(),
-                req.bodyTemplate() != null ? req.bodyTemplate() : old.bodyTemplate(),
-                req.allowedVariables() != null ? req.allowedVariables() : old.allowedVariables(),
-                old.version() + 1,
-                old.createdAt(),
-                LocalDateTime.now()
-        );
-        stores.templates.put(updated.id(), updated);
-        return updated;
-    }
-
+    @Transactional
     public void delete(Long templateId) {
-        if (stores.templates.remove(templateId) == null) {
+        if (!templateRepository.existsById(templateId)) {
             throw new ApiException(ErrorCode.NOT_FOUND, "template not found: " + templateId);
         }
+        templateRepository.deleteById(templateId);
     }
 
+    @Transactional(readOnly = true)
     public Map<String, String> preview(TemplatePreviewRequest req) {
-        Template t = stores.templates.get(req.templateId());
-        if (t == null) throw new ApiException(ErrorCode.NOT_FOUND, "template not found: " + req.templateId());
+        TemplateEntity t = templateRepository.findById(req.templateId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "template not found: " + req.templateId()));
 
         Map<String, String> vars = Optional.ofNullable(req.variables()).orElse(Map.of());
-        validateVariables(t.allowedVariables(), vars);
+        List<String> allowed = fromJsonList(t.getAllowedVariablesJson());
 
-        String subject = t.subjectTemplate() == null ? null : apply(t.subjectTemplate(), vars);
-        String body = apply(t.bodyTemplate(), vars);
+        validateVariables(allowed, vars);
+
+        String subject = t.getSubjectTemplate() == null ? null : apply(t.getSubjectTemplate(), vars);
+        String body = apply(t.getBodyTemplate(), vars);
 
         return Map.of(
-                "templateId", String.valueOf(t.id()),
-                "version", String.valueOf(t.version()),
+                "templateId", String.valueOf(t.getId()),
+                "version", String.valueOf(t.getVersion()),
                 "subject", subject == null ? "" : subject,
                 "body", body
         );
     }
 
     private void validateVariables(List<String> allowed, Map<String, String> vars) {
-        // 허용 변수 외 들어오면 실패
         for (String k : vars.keySet()) {
             if (!allowed.contains(k)) {
                 throw new ApiException(ErrorCode.BAD_REQUEST, "not allowed variable: " + k);
             }
         }
-        // 누락 변수 체크(템플릿에 {x}가 있는 경우)
-        // 간단히: allowed 변수가 있는데 값이 없으면 실패로 처리(요구사항 반영)
         for (String k : allowed) {
             if (!vars.containsKey(k)) {
                 throw new ApiException(ErrorCode.BAD_REQUEST, "missing variable: " + k);
@@ -107,16 +99,28 @@ public class TemplateService {
     private String apply(String template, Map<String, String> vars) {
         String out = template;
         for (var e : vars.entrySet()) {
-            out = out.replace("{" + e.getKey() + "}", e.getValue());
+            out = out.replace("{" + e.getKey() + "}", e.getValue() == null ? "" : e.getValue());
         }
         return out;
     }
 
-    private Channel parseChannel(String s) {
+    private MessageType parseType(String channel) {
+        if (channel == null) throw new ApiException(ErrorCode.BAD_REQUEST, "channel is required");
         try {
-            return Channel.valueOf(s.toUpperCase());
+            return MessageType.valueOf(channel.toUpperCase());
         } catch (Exception e) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "invalid channel: " + s);
+            throw new ApiException(ErrorCode.BAD_REQUEST, "invalid channel: " + channel);
         }
+    }
+
+    private String toJson(Object o) {
+        try { return objectMapper.writeValueAsString(o); }
+        catch (Exception e) { throw new ApiException(ErrorCode.INTERNAL_ERROR, "json serialize failed"); }
+    }
+
+    private List<String> fromJsonList(String json) {
+        if (json == null || json.isBlank()) return List.of();
+        try { return objectMapper.readValue(json, new TypeReference<List<String>>() {}); }
+        catch (Exception e) { return List.of(); }
     }
 }

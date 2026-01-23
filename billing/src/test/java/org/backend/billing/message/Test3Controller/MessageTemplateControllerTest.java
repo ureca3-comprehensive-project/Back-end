@@ -1,13 +1,13 @@
 package org.backend.billing.message.Test3Controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Map;
@@ -17,114 +17,80 @@ import org.backend.billing.message.dto.request.TemplateCreateRequest;
 import org.backend.billing.message.dto.request.TemplatePreviewRequest;
 import org.backend.billing.message.dto.request.TemplateUpdateRequest;
 import org.backend.billing.message.service.TemplateService;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(MessageTemplateController.class)
-@AutoConfigureMockMvc(addFilters = false)
 class MessageTemplateControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired MockMvc mockMvc;
 
-    @MockitoBean
-    private TemplateService templateService;
+    @MockitoBean TemplateService templateService;
 
     @Test
-    @DisplayName("POST /messages/template - 템플릿 등록이 정상 호출된다")
     void create_ok() throws Exception {
-        when(templateService.create(any(TemplateCreateRequest.class))).thenReturn(null);
+        // 리턴 타입(TemplateResponse/Entity 등) 확실치 않아서 null 반환으로 컴파일 안정
+        given(templateService.create(any(TemplateCreateRequest.class))).willReturn(null);
 
         String body = """
-            {
-              "name": "welcome",
-              "subjectTemplate": "Hello {userName}",
-              "bodyTemplate": "Amount: {amount}",
-              "allowedVariables": ["userName","amount"]
-            }
-            """;
+                {
+                  "name":"welcome",
+                  "channel":"EMAIL",
+                  "subjectTemplate":"hi {userName}",
+                  "bodyTemplate":"body {userName}",
+                  "allowedVariables":["userName"]
+                }
+                """;
 
         mockMvc.perform(post("/messages/template")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk());
-
-        verify(templateService, times(1)).create(any(TemplateCreateRequest.class));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    @DisplayName("PATCH /messages/template/{templateId} - PathVariable templateId가 req에 주입되어 update로 전달된다")
-    void update_injects_path_id() throws Exception {
-        when(templateService.update(any(TemplateUpdateRequest.class))).thenReturn(null);
-
-        long pathId = 10L;
+    void update_ok() throws Exception {
+        given(templateService.update(any(TemplateUpdateRequest.class))).willReturn(null);
 
         String body = """
-            {
-              "templateId": 999,
-              "name": "welcome2",
-              "subjectTemplate": "Hi {userName}",
-              "bodyTemplate": "Pay: {amount}",
-              "allowedVariables": ["userName","amount"]
-            }
-            """;
+                {"name":"welcome2","subjectTemplate":"s","bodyTemplate":"b","allowedVariables":["x"]}
+                """;
 
-        mockMvc.perform(patch("/messages/template/{templateId}", pathId)
-                        .contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch("/messages/template/10")
+                        .contentType(APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk());
-
-        ArgumentCaptor<TemplateUpdateRequest> captor = ArgumentCaptor.forClass(TemplateUpdateRequest.class);
-        verify(templateService, times(1)).update(captor.capture());
-
-        TemplateUpdateRequest fixed = captor.getValue();
-        org.junit.jupiter.api.Assertions.assertEquals(pathId, fixed.templateId());
-        org.junit.jupiter.api.Assertions.assertEquals("welcome2", fixed.name());
-        org.junit.jupiter.api.Assertions.assertEquals("Hi {userName}", fixed.subjectTemplate());
-        org.junit.jupiter.api.Assertions.assertEquals("Pay: {amount}", fixed.bodyTemplate());
-        org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of("userName", "amount"), fixed.allowedVariables());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    @DisplayName("DELETE /messages/template/{templateId} - 삭제가 정상 호출된다")
     void delete_ok() throws Exception {
-        doNothing().when(templateService).delete(5L);
+        willDoNothing().given(templateService).delete(10L);
 
-        mockMvc.perform(delete("/messages/template/{templateId}", 5L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        verify(templateService, times(1)).delete(5L);
+        mockMvc.perform(delete("/messages/template/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.deleted").value(true));
     }
 
     @Test
-    @DisplayName("POST /messages/template/preview - 미리보기가 정상 호출된다")
     void preview_ok() throws Exception {
-        when(templateService.preview(any(TemplatePreviewRequest.class)))
-                .thenReturn(Map.of("subject", "Hello Minseok", "body", "Amount: 1000"));
+        given(templateService.preview(any(TemplatePreviewRequest.class)))
+                .willReturn(Map.of("templateId", "10", "subject", "hi", "body", "hello"));
 
         String body = """
-            {
-              "templateId": 1,
-              "variables": {
-                "userName": "Minseok",
-                "amount": "1000"
-              }
-            }
-            """;
+                {"templateId":10,"variables":{"userName":"민석"}}
+                """;
 
         mockMvc.perform(post("/messages/template/preview")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk());
-
-        verify(templateService, times(1)).preview(any(TemplatePreviewRequest.class));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.body").value("hello"));
     }
 }

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin · Templates</title>
+  <link rel="stylesheet" href="/admin/assets/styles.css"/>
+
+</head>
+<body data-page="templates">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div class="brand-title">U+ Billing Admin</div>
+          <div class="brand-sub">Template Management</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="./index.html" data-page="dashboard"><span class="dot"></span>대시보드</a>
+        <a href="./billing.html" data-page="billing"><span class="dot"></span>요금 명세서</a>
+        <a href="./messages.html" data-page="messages"><span class="dot"></span>메시지 발송 이력</a>
+        <a href="./templates.html" data-page="templates"><span class="dot"></span>메시지 템플릿</a>
+        <a href="./batch.html" data-page="batch"><span class="dot"></span>배치 실행/이력</a>
+        <a href="./monitoring.html" data-page="monitoring"><span class="dot"></span>장애/실패 모니터링</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="h1">메시지 템플릿 관리</div>
+          <div class="desc">템플릿 생성/수정/삭제 + 미리보기</div>
+        </div>
+        <div class="actions">
+          <div id="metaPill" class="pill"></div>
+          <button id="tplNewBtn" class="btn primary">+ 새 템플릿</button>
+        </div>
+      </div>
+
+      <section class="grid two">
+        <div class="card">
+          <h3>템플릿 목록</h3>
+          <table class="table">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Channel</th><th>UpdatedAt</th><th></th></tr>
+            </thead>
+            <tbody id="tplTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>미리보기</h3>
+          <div class="form">
+            <div class="field">
+              <label>TemplateId</label>
+              <input id="pvTplId" class="input" placeholder="예) 12"/>
+            </div>
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label>Variables (JSON)</label>
+            <textarea id="pvVars" class="input" style="height:140px; padding:10px; line-height:1.35;" placeholder='{"userName":"민석","amount":34800}'></textarea>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:10px;">
+            <button id="tplPreviewBtn" class="btn primary">미리보기 실행</button>
+          </div>
+          <div class="small" style="margin-top:10px;">미리보기 API가 없다면 백엔드에 맞춰 EP.tplPreview만 수정하면 됩니다.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 공통 모달 (템플릿 생성/수정에 사용) -->
+  <div id="modal" class="modal">
+    <div class="box">
+      <div class="head">
+        <div id="modalTitle" style="font-weight:900">상세</div>
+        <button id="modalClose" class="btn ghost">닫기</button>
+      </div>
+      <div id="modalBody" class="body"></div>
+      <div class="foot">
+        <button id="modalCancel" class="btn">취소</button>
+        <button id="modalSave" class="btn primary">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
