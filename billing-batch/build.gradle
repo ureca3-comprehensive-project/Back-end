@@ -13,5 +13,5 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'
-    testRuntimeOnly 'com.h2database:h2'
+
 }

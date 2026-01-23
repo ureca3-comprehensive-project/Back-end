@@ -7,6 +7,7 @@ plugins {
 dependencies {
     implementation project(':core')
     implementation project(':domain')
+    runtimeOnly project(':billing-batch')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -17,7 +18,7 @@ dependencies {
     
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'com.h2database:h2' // 테스트는 H2로 통과시키기
+
 }
 
 subprojects {
