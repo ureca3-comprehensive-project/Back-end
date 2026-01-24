@@ -3,8 +3,8 @@ const API_BASE = ""; // 같은 서버면 빈 문자열. 분리 배포면 "http:/
 
 // 엔드포인트는 "당신의 백엔드 경로"에 맞게 여기만 조정하면 됩니다.
 const EP = {
-  dashboard: "/billing/bills/statistics",
-  recentFailures: "/api/admin/messages/recent-failures",
+  dashboard: "/billing/dashboard/summary",
+  recentFailures: "/billing/dashboard/recentFailures",
 
   billingList: "/billing/bills",
   billingDetail: (id) => `/billing/bills/${id}`,
@@ -145,46 +145,73 @@ const mock = {
 };
 
 // ====== 페이지별 로더 ======
-async function loadDashboard(){
+async function loadDashboard() {
   let sum, fails;
-  try{
+  try {
+//    const resp = await fetchJson(EP.dashboard);
+//    console.log("1. 백엔드 원본 응답:", resp);
+    // 백엔드 API 호출
     sum = unwrap(await fetchJson(EP.dashboard));
-    fails = unwrap(await fetchJson(EP.recentFailures));
-  }catch(e){
+//    console.log("2. unwrap 후 데이터:", sum);
+
+    // 최근 실패 내역 API
+    fails = unwrap(await fetchJson("/billing/dashboard/recentFailures"));
+  } catch (e) {
+    console.warn("백엔드 연결 실패, 모의 데이터를 사용합니다.");
     sum = mock.dashboard;
     fails = mock.recentFailures;
   }
 
   $("#kpiBilling").textContent = fmt(sum.todayBillingCount);
   $("#kpiSuccess").textContent = fmt(sum.msgSuccess);
+  $("#kpiPending").textContent = fmt(sum.msgPending);
   $("#kpiFail").textContent = fmt(sum.msgFail);
 
-  const br = sum.channelRatio || {EMAIL:0,SMS:0,PUSH:0};
-  const max = Math.max(br.EMAIL||0, br.SMS||0, br.PUSH||0, 1);
+  // --- [채널별 발송 비율 차트 업데이트] ---
+    const br = sum.channelRatio || { EMAIL: 0, SMS: 0, PUSH: 0 };
+    const total = (sum.msgSuccess + sum.msgFail + sum.msgPending) || 1;
 
-  $("#barEmail").style.height = `${Math.round((br.EMAIL||0)/max*100)}%`;
-  $("#barSms").style.height   = `${Math.round((br.SMS||0)/max*100)}%`;
-  $("#barPush").style.height  = `${Math.round((br.PUSH||0)/max*100)}%`;
+    const chartData = [
+      { id: 'barEmail', valId: 'barEmailVal', count: br.EMAIL || 0 },
+      { id: 'barSms',   valId: 'barSmsVal',   count: br.SMS || 0 },
+      { id: 'barPush',  valId: 'barPushVal',  count: br.PUSH || 0 }
+    ];
 
-  $("#barEmailVal").textContent = `${br.EMAIL||0}%`;
-  $("#barSmsVal").textContent   = `${br.SMS||0}%`;
-  $("#barPushVal").textContent  = `${br.PUSH||0}%`;
+    chartData.forEach(item => {
+      const ratio = Math.round((item.count / total) * 100);
+      const bar = document.getElementById(item.id);
+      const val = document.getElementById(item.valId);
 
+      if (bar) {
+        bar.style.width = "0%";
+        setTimeout(() => {
+          bar.style.width = ratio + "%";
+          console.log(`[차트 반영] ${item.id}: ${ratio}%`);
+        }, 300);
+      }
+      if (val) {
+        val.textContent = `${ratio}% (${fmt(item.count)}건)`;
+      }
+    });
+
+  // --- [배치 처리 상태 업데이트] ---
   const b = sum.batch || {};
   $("#batchBadge").innerHTML = badge(b.lastStatus || "UNKNOWN");
-  $("#batchMeta").textContent = `Running: ${fmt(b.running||0)} · Last: ${fmtDt(b.lastRunAt)}`;
+  $("#batchMeta").textContent = `진행중: ${fmt(b.running || 0)} · 마지막 실행: ${fmtDt(b.lastRunAt)}`;
 
-  const rows = (fails||[]).map(f=>`
+  // --- [최근 실패 내역 테이블 업데이트] ---
+  const rows = (fails || []).map(f => `
     <tr>
-      <td>${fmt(f.messageId)}</td>
-      <td>${f.channel||"-"}</td>
-      <td>${f.provider||"-"}</td>
+      <td>${fmt(f.messageId || f.id)}</td>
+      <td>${f.channelType || f.channel || "-"}</td>
+      <td>${f.provider || "System"}</td>
       <td>${badge(f.status)}</td>
-      <td>${f.errorCode||"-"}</td>
+      <td><span class="text-bad">${f.errorCode || "TIMEOUT"}</span></td>
       <td class="small">${fmtDt(f.createdAt)}</td>
     </tr>
   `).join("");
-  $("#recentFailTbody").innerHTML = rows || `<tr><td colspan="6" class="small">최근 실패가 없습니다.</td></tr>`;
+
+  $("#recentFailTbody").innerHTML = rows || `<tr><td colspan="6" class="small">최근 실패 내역이 없습니다.</td></tr>`;
 }
 
 async function loadBilling(){

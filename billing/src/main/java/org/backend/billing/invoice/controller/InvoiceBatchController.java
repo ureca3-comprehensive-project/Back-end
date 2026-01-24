@@ -85,16 +85,4 @@ public class InvoiceBatchController {
         return ResponseEntity.ok(invoiceBatchPort.getDuplicateReport(billingMonth));
     }
 
-//    // 배치 에러 요약 데이터
-//    @GetMapping("/{runId}/error/summary")
-//    public ResponseEntity<Map<String, Long>> getBatchErrorSummary(@PathVariable Long runId) {
-//        return ResponseEntity.ok(invoiceBatchPort.getErrorSummary(runId));
-//    }
-//
-//
-//    // 배치 처리 추이 조회
-//    @GetMapping("/execution-trends")
-//    public ResponseEntity<List<Map<String, Object>>> getBatchExecutionTrends() {
-//        return ResponseEntity.ok(invoiceBatchPort.getExecutionTrends());
-//    }
 }
