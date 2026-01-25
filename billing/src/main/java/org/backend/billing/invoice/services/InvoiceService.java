@@ -67,34 +67,4 @@ public class InvoiceService {
                 .collect(Collectors.toList());
     }
 
-//    // 추가 기능
-//    public Map<String, Object> getTodayStatistics() {
-//        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-//        long todayCount = invoiceRepository.countByCreatedAtAfter(todayStart);
-//
-//        // 지난달 동일 시간대 비교 (예: 1월 23일 vs 12월 23일)
-//        LocalDateTime lastMonthStart = todayStart.minusMonths(1);
-//        LocalDateTime lastMonthEnd = LocalDateTime.now().minusMonths(1);
-//        long lastMonthCount = invoiceRepository.countByCreatedAtBetween(lastMonthStart, lastMonthEnd);
-//
-//        // 증가율 계산 (분모가 0인 경우 예외처리 포함)
-//        double increaseRate = (lastMonthCount == 0) ? 0 :
-//                ((double)(todayCount - lastMonthCount) / lastMonthCount) * 100;
-//
-//        return Map.of(
-//                "todayCount", todayCount,
-//                "increaseRate", Math.round(increaseRate * 100) / 100.0 // 소수점 둘째자리 반올림
-//        );
-//    }
-//
-//    public List<Map<String, Object>> getRelatedMessageHistory(Long billId) {
-//        // Invoice ID를 외래키로 가진 Message 테이블 조회
-//        // QueryDSL이나 Native SQL을 사용하여 상세 정보(채널명, 발송시간, 성공여부) 반환
-//        return messageRepository.findHistoryByInvoiceId(billId);
-//    }
-//
-//    public Map<String, Long> getMessageChannelStatistics() {
-//        return messageRepository.countByChannelType().stream()
-//                .collect(Collectors.toMap(row -> row[0].toString(), row -> (Long) row[1]));
-//    }
 }
