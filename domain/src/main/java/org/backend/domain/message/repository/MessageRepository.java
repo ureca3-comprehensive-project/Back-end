@@ -29,15 +29,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 		    						  @Param("now") LocalDateTime now,
 		    						   Pageable pageable);
 
-//	// 통계본
-//	@Query(value = "SELECT m.channel_type as channelType, m.status as status, " +
-//			"m.sent_at as sentAt, t.title as title " +
-//			"FROM Message m " +
-//			"JOIN Template t ON m.template_id = t.template_id " +
-//			"WHERE m.invoice_id = :invoiceId", nativeQuery = true)
-//	List<Map<String, Object>> findHistoryByInvoiceId(@Param("invoiceId") Long invoiceId);
-//
-//	@Query("SELECT m.channelType, COUNT(m) FROM Message m GROUP BY m.channelType")
-//	List<Object[]> countByChannelType();
+	@Query("SELECT m.channelType, COUNT(m) FROM Message m GROUP BY m.channelType")
+	List<Object[]> countByChannelType();
 
+	// 대시보드용: 최근 실패한 메시지 5건 조회
+	List<Message> findTop5ByStatusOrderByCreatedAtDesc(MessageStatus status);
+
+	// 대시보드용: 특정 상태 및 생성일 이후 건수 집계
+	long countByStatusAndCreatedAtAfter(MessageStatus status, LocalDateTime dateTime);
 }

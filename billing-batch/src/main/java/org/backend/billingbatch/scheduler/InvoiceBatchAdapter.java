@@ -8,6 +8,7 @@ import org.backend.billingbatch.services.BatchService;
 import org.backend.billingbatch.services.LockService;
 import org.backend.core.port.InvoiceBatchPort;
 import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.backend.core.dto.LockStatusResponse;
@@ -28,6 +29,9 @@ public class InvoiceBatchAdapter implements InvoiceBatchPort {
     // --- [핵심] Entity -> DTO 변환 메서드 ---
     private BatchRunResponse toDto(JobExecution execution) {
         if (execution == null) return null;
+        long totalWriteCount = execution.getStepExecutions().stream()
+                .mapToLong(StepExecution::getWriteCount)
+                .sum();
         return BatchRunResponse.builder()
                 .jobExecutionId(execution.getId())
                 .jobName(execution.getJobInstance().getJobName())
@@ -36,6 +40,7 @@ public class InvoiceBatchAdapter implements InvoiceBatchPort {
                 .startTime(execution.getStartTime())
                 .endTime(execution.getEndTime())
                 .billingMonth(execution.getJobParameters().getString("billingMonth"))
+                .writeCount(totalWriteCount)
                 .build();
     }
 

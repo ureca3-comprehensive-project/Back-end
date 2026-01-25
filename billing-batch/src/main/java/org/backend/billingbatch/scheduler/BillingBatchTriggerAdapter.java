@@ -1,6 +1,5 @@
 package org.backend.billingbatch.scheduler;
 
-import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import org.backend.port.BatchCommand;
 import org.backend.port.BatchTriggerPort;
@@ -9,7 +8,6 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.stereotype.Component;
 
 
@@ -20,13 +18,11 @@ public class BillingBatchTriggerAdapter implements BatchTriggerPort {
     private final JobLauncher jobLauncher;
     private final Job billingJob;
 
-
     @Override
     public void trigger(BatchCommand command) {
         if(!billingJob.getName().equals(command.jobName())){
             return;
         }
-
 
         try{
             JobParameters jobParameters =
@@ -38,8 +34,6 @@ public class BillingBatchTriggerAdapter implements BatchTriggerPort {
         }catch(Exception e){
             throw new RuntimeException("배치 실행 실패",e);
         }
-
-
 
     }
 }

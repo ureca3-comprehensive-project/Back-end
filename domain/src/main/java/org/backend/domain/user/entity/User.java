@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "User",
         indexes = {
                 @Index(name = "idx_users_email", columnList = "email"),
-                @Index(name = "idx_users_phone", columnList = "phone")
+//                @Index(name = "idx_users_phone", columnList = "phone")
         })
 public class User{
 

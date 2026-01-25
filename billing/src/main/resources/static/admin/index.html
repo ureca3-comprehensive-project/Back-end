@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin · Dashboard</title>
-  <link rel="stylesheet" href="/admin/assets/styles.css"/>
+  <link rel="stylesheet" href="/assets/styles.css"/>
 </head>
 <body data-page="dashboard">
   <div class="shell">
@@ -40,7 +40,7 @@
 
       <section class="grid kpi">
         <div class="card">
-          <h3>오늘 생성된 요금 명세서</h3>
+          <h3>오늘 생성된 청구서 수</h3>
           <div id="kpiBilling" class="kpi-num">-</div>
           <div class="kpi-meta">Billing Statements Today</div>
         </div>
@@ -50,9 +50,13 @@
           <div class="kpi-meta">Message SUCCESS</div>
         </div>
         <div class="card">
-          <h3>메시지 실패</h3>
-          <div id="kpiFail" class="kpi-num">-</div>
-          <div class="kpi-meta">Message FAIL</div>
+          <h3>메시지 미완료 현황 (대기/실패)</h3>
+          <div style="display: flex; gap: 5px; margin-top: 10px;">
+            <div id="kpiPending" class="kpi-num">-</div>
+            <div class="kpi-num">/</div>
+            <div id="kpiFail" class="kpi-num">-</div>
+          </div>
+          <div class="kpi-meta">Message PENDING / FAIL</div>
         </div>
         <div class="card">
           <h3>배치 처리 상태</h3>
@@ -64,24 +68,39 @@
       <section class="grid two" style="margin-top:12px;">
         <div class="card">
           <h3>채널별 발송 비율</h3>
-          <div class="chartbar">
-            <div class="bar">
-              <b>EMAIL</b>
-              <i id="barEmail" style="height:0%"></i>
-              <em id="barEmailVal">0%</em>
+          <div id="chartArea" style="display: block; width: 100%; padding: 10px 0;">
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                <b style="color: #111827;">EMAIL</b>
+                <span id="barEmailVal" style="color: #EC008C; font-weight: bold;">0% (0건)</span>
+              </div>
+              <div style="width: 100%; height: 16px; background-color: #eee; border-radius: 8px; position: relative;">
+                <div id="barEmail" style="width: 0%; height: 100%; background: linear-gradient(90deg, #EC008C, #C5013D); border-radius: 8px; transition: width 1s;"></div>
+              </div>
             </div>
-            <div class="bar">
-              <b>SMS</b>
-              <i id="barSms" style="height:0%"></i>
-              <em id="barSmsVal">0%</em>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                <b style="color: #111827;">SMS</b>
+                <span id="barSmsVal" style="color: #EC008C; font-weight: bold;">0% (0건)</span>
+              </div>
+              <div style="width: 100%; height: 16px; background-color: #eee; border-radius: 8px; position: relative;">
+                <div id="barSms" style="width: 0%; height: 100%; background: linear-gradient(90deg, #EC008C, #C5013D); border-radius: 8px; transition: width 1s;"></div>
+              </div>
             </div>
-            <div class="bar">
-              <b>PUSH</b>
-              <i id="barPush" style="height:0%"></i>
-              <em id="barPushVal">0%</em>
+
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                <b style="color: #111827;">PUSH</b>
+                <span id="barPushVal" style="color: #EC008C; font-weight: bold;">0% (0건)</span>
+              </div>
+              <div style="width: 100%; height: 16px; background-color: #eee; border-radius: 8px; position: relative;">
+                <div id="barPush" style="width: 0%; height: 100%; background: linear-gradient(90deg, #EC008C, #C5013D); border-radius: 8px; transition: width 1s;"></div>
+              </div>
             </div>
+
           </div>
-          <div class="small">백엔드에서 채널 비율(%)을 내려주면 자동 반영됩니다.</div>
         </div>
 
         <div class="card">
@@ -114,6 +133,6 @@
     </div>
   </div>
 
-  <script src="/admin/assets/app.js"></script>
+  <script src="/assets/app.js"></script>
 </body>
 </html>

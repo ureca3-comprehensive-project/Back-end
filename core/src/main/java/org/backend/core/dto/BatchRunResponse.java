@@ -15,4 +15,5 @@ public class BatchRunResponse {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String billingMonth; // JobParameter에서 꺼낼 값
+    private Long writeCount; // 배치 작업 개수 현황
 }
