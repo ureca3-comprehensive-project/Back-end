@@ -22,5 +22,9 @@ public class ContractInfo {
     private BigDecimal discountRate;
     private BigDecimal discountLimit;
 
+    private BigDecimal voice_usage;
+    private BigDecimal data_usage;
+    private BigDecimal vas;
+
 
 }
