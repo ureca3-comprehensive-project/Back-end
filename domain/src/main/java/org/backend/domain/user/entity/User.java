@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "User",
+@Table(name = "Users",
         indexes = {
                 @Index(name = "idx_users_email", columnList = "email"),
 //                @Index(name = "idx_users_phone", columnList = "phone")

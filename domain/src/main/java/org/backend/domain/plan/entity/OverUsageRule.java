@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "over_usage_rule",
+@Table(name = "OverUsageRule",
         indexes = {
                 @Index(name = "idx_over_usage_rule_item_id", columnList = "item_id")
         })

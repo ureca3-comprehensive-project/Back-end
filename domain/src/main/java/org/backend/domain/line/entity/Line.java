@@ -63,6 +63,9 @@ public class Line {
 
     @Column(name = "end_date")
     private LocalDateTime endDate;
+    
+    @Column(name = "is_representative")
+    private boolean isRepresentative;
 
     @Column(name = "phone", nullable = false, unique = true)
     private String phone; // 암호화는 모듈에서 처리

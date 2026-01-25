@@ -2,9 +2,9 @@ package org.backend.domain.message.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import org.backend.domain.message.entity.Message;
+import org.backend.domain.message.type.ChannelType;
 import org.backend.domain.message.type.MessageStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,4 +37,14 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
 	// 대시보드용: 특정 상태 및 생성일 이후 건수 집계
 	long countByStatusAndCreatedAtAfter(MessageStatus status, LocalDateTime dateTime);
+
+	// ✅ 목록(최신 200개)
+    List<Message> findTop200ByOrderByCreatedAtDesc();
+
+    // ✅ 필터용(선택)
+    List<Message> findTop200ByStatusOrderByCreatedAtDesc(MessageStatus status);
+    List<Message> findTop200ByChannelTypeOrderByCreatedAtDesc(ChannelType channelType);
+    List<Message> findTop200ByStatusAndChannelTypeOrderByCreatedAtDesc(MessageStatus status, ChannelType channelType);
+	
+
 }
