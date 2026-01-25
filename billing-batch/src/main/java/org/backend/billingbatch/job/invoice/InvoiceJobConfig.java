@@ -155,7 +155,7 @@ public class InvoiceJobConfig {
 
         // 조인 연산에서 시간을 잡아먹는지, DB 서버 설정이나 I/O 병목현상인지 확인을 위해 작성 => 1397.591 초(23분), 893.96 초당 처리량
         // 125만건 => 1시간 3분 소요
-        provider.setFromClause("FROM BillingHistory b");
+        provider.setFromClause("FROM BillingHistory b JOIN line l ON b.line_id = l.line_id");
         provider.setWhereClause("WHERE b.billing_month = :billingMonth");
 
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
@@ -223,7 +223,7 @@ public class InvoiceJobConfig {
     public JdbcBatchItemWriter<InvoiceDto> invoiceDetailInsertWriter() {
         return new JdbcBatchItemWriterBuilder<InvoiceDto>()
                 .dataSource(dataSource)
-                .sql("INSERT INTO invoice_detail (invoice_detail_id, invoice_id, billing_type, amount, status) " +
+                .sql("INSERT INTO invoice_details (invoice_detail_id, invoice_id, billing_type, amount, status) " +
                         "VALUES (:detailId, :invoiceId, :billingType, :detailAmount, :detailStatus)")
                 .beanMapped()
                 .build();
