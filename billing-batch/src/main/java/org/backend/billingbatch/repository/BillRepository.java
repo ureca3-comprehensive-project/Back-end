@@ -16,7 +16,7 @@ public class BillRepository {
     public BigDecimal getUsageSum(Long lineId, String itemType, String logMonth){
         String sql =
                 """
-                SELECT used_amount
+                SELECT COALESCE(SUM(used_amount), 0)
                 FROM UsageLog
                 WHERE line_id = ? AND item_type = ? AND log_month = ?;
                 """;

@@ -23,12 +23,13 @@ public class BillingManualController {
     public ResponseEntity<String> runManualBilling(@RequestBody ManualBillingRequest req){
 
         String date = req.getTargetDate();
+        String preDate = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
         if(date == null || date.isBlank()){
-            date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+            date = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
         }
 
-        batchTriggerPort.trigger(new BatchCommand("billingJob", date));
+        batchTriggerPort.trigger(new BatchCommand("billingJob", preDate));
 
         return ResponseEntity.ok("베치 실행 요청됨");
     }

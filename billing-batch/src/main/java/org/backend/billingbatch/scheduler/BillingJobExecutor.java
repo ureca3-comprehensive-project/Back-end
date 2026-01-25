@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameter;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
@@ -17,9 +19,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@DisallowConcurrentExecution
 public class BillingJobExecutor extends QuartzJobBean {
 
-    private final JobOperator jobOperator;
+    private final JobLauncher jobLauncher;
     private final Job billingJob;
 
     @Override
@@ -28,12 +31,12 @@ public class BillingJobExecutor extends QuartzJobBean {
             log.info("BillingJob 실행");
 
 
-            String billingMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+            String billingMonth = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
             JobParameters jobParameters = new JobParametersBuilder().addString("date",billingMonth)
                     .toJobParameters();
 
-            jobOperator.start(billingJob, jobParameters);
+            jobLauncher.run(billingJob, jobParameters);
 
         } catch(Exception e){
             log.error("BillingJob 실행 중 오류 발생", e);
