@@ -33,7 +33,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "message",
         indexes = {
-        		@Index(name = "idx_message_invoice_id", columnList = "invoice_id")
+        		@Index(name = "idx_message_invoice_id", columnList = "invoice_id"),
+				@Index(name = "idx_message_status_createdat", columnList = "status, created_at")
         })
 public class Message extends BaseEntity {
 	

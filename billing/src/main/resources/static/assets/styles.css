@@ -262,38 +262,44 @@ hr.sep{
   background: rgba(255,255,255,.85);
 }
 
-.chartbar{
-  display:flex;
-  gap:10px;
-  align-items:flex-end;
-  height: 140px;
-  padding: 10px 2px 2px;
+/* 채널별 발송 비율 디자인 */
+.stat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 5px;
 }
-.chartbar .bar{
-  flex:1;
-  border-radius: 14px;
-  background: rgba(17,24,39,.08);
-  position:relative;
-  overflow:hidden;
-  border:1px solid var(--line);
+
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.chartbar .bar > i{
-  position:absolute;
-  left:0; right:0; bottom:0;
-  background: linear-gradient(180deg, rgba(236,0,140,.95), rgba(197,1,61,.90));
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
+
+.stat-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
 }
-.chartbar .bar > b{
-  position:absolute;
-  left:10px; top:10px;
-  font-size:12px;
+
+.stat-label b { color: var(--ink); font-weight: 800; }
+.stat-label span { color: var(--brand); font-weight: 700; font-family: monospace; }
+
+.stat-bar-bg {
+  width: 100% !important;
+  height: 16px !important;
+  background-color: #e5e7eb !important;
+  border-radius: 8px !important;
+  overflow: visible !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  position: relative !important;
 }
-.chartbar .bar > em{
-  position:absolute;
-  left:10px; bottom:10px;
-  font-size:12px;
-  color:rgba(255,255,255,.92);
-  font-style:normal;
-  font-weight:900;
+
+.stat-bar-fill {
+  height: 100% !important;
+  border-radius: 8px !important;
+  transition: width 1s ease-out !important;
+  min-width: 5px !important;
+  box-shadow: 0 2px 4px rgba(236, 0, 140, 0.3);
 }

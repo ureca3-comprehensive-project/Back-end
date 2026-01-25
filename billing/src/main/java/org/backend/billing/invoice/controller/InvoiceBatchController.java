@@ -47,7 +47,7 @@ public class InvoiceBatchController {
     }
 
     // 배치 실행 목록 조회 (대시보드)
-    @GetMapping
+    @GetMapping("/runs")
     public ResponseEntity<List<BatchRunResponse>> getBatchRuns(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit) {
@@ -67,13 +67,16 @@ public class InvoiceBatchController {
     }
 
     // 배치 (수동 트리거) - test에서 빠짐
-    @PostMapping
-    public ResponseEntity<Long> runBatchManually(@RequestBody BatchRunRequest request) {
+    @PostMapping("/manual")
+    public ResponseEntity<Map<String, Object>> runBatchManually(@RequestBody BatchRunRequest request) {
         Long executionId = invoiceBatchPort.runJobManually(request);
         if (executionId == null) {
             return ResponseEntity.status(409).build(); // 락 획득 실패 시
         }
-        return ResponseEntity.ok(executionId);
+        return ResponseEntity.ok(Map.of(
+                "message", "배치 실행 요청됨",
+                "executionId", executionId
+        ));
     }
 
     // 청구서 중복 검증
@@ -82,16 +85,4 @@ public class InvoiceBatchController {
         return ResponseEntity.ok(invoiceBatchPort.getDuplicateReport(billingMonth));
     }
 
-//    // 배치 에러 요약 데이터
-//    @GetMapping("/{runId}/error/summary")
-//    public ResponseEntity<Map<String, Long>> getBatchErrorSummary(@PathVariable Long runId) {
-//        return ResponseEntity.ok(invoiceBatchPort.getErrorSummary(runId));
-//    }
-//
-//
-//    // 배치 처리 추이 조회
-//    @GetMapping("/execution-trends")
-//    public ResponseEntity<List<Map<String, Object>>> getBatchExecutionTrends() {
-//        return ResponseEntity.ok(invoiceBatchPort.getExecutionTrends());
-//    }
 }

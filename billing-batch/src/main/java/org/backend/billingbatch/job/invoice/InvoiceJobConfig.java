@@ -15,6 +15,7 @@ import org.springframework.batch.core.listener.ItemWriteListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.database.*;
@@ -33,6 +34,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,16 +143,17 @@ public class InvoiceJobConfig {
         // 전부 정산되 가격이 amount로 올 경우
         provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
 
-//        provider.setFromClause("FROM BillingHistory b " +
-//                "INNER JOIN Line l ON b.line_id = l.line_id " +
-//                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
-//
-//        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
-//        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
+        provider.setFromClause("FROM BillingHistory b " +
+                "INNER JOIN Line l ON b.line_id = l.line_id " +
+                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
+
+        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
+        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
 
         // 조인 연산에서 시간을 잡아먹는지, DB 서버 설정이나 I/O 병목현상인지 확인을 위해 작성 => 1397.591 초(23분), 893.96 초당 처리량
-        provider.setFromClause("FROM BillingHistory b");
-        provider.setWhereClause("WHERE b.billing_month = :billingMonth");
+        // 125만건 => 1시간 3분 소요
+//        provider.setFromClause("FROM BillingHistory b");
+//        provider.setWhereClause("WHERE b.billing_month = :billingMonth");
 
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
 
@@ -255,12 +258,26 @@ public class InvoiceJobConfig {
 
             @Override
             public void afterChunk(ChunkContext context) {
+                // 배치 작업 시간 계산
+                StepExecution stepExecution = context.getStepContext().getStepExecution();
+
+                LocalDateTime startTime = stepExecution.getStartTime();
+                if (startTime == null) startTime = LocalDateTime.now();
+
+                Duration duration = Duration.between(startTime, LocalDateTime.now());
+
+                // "HH:mm:ss" 형식으로 포맷팅 (9시간 넘어가면 시/분/초 계산 필요)
+                String elapsedTime = String.format("%02d:%02d:%02d",
+                        duration.toHours(),
+                        duration.toMinutesPart(),
+                        duration.toSecondsPart());
+
                 long currentTime = System.currentTimeMillis();
                 long diffTime = currentTime - lastTime;
                 long count = context.getStepContext().getStepExecution().getReadCount();
 
-                System.out.printf("[%s] [%s]>>> 처리된 레코드: %d건 | 이번 1,000건 소요 시간: %.2f초\n",
-                        java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")),
+                System.out.printf("[Running: %s] [%s]>>> 처리된 레코드: %d건 | 이번 1,000건 소요 시간: %.2f초\n",
+                        elapsedTime,
                         Thread.currentThread().getName(),
                         count,
                         diffTime / 1000.0

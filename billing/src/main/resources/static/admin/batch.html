@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin · Batch</title>
-  <link rel="stylesheet" href="/admin/assets/styles.css"/>
+  <link rel="stylesheet" href="/assets/styles.css"/>
 </head>
 <body data-page="batch">
   <div class="shell">
@@ -43,9 +43,13 @@
           <div class="field">
             <label>Job Name</label>
             <select id="batchJob">
-              <option>BillingBatch</option>
-              <option>RetryBatch</option>
+              <option value="billingJob">이번 달 정산 (BillingBatch)</option>
+              <option value="createInvoiceJob">청구서 생성 (InvoiceBatch)</option>
             </select>
+          </div>
+          <div class="field">
+            <label>Billing Month</label>
+            <input type="text" id="batchMonth" class="input" placeholder="YYYY-MM (예: 2024-01)" value="2025-12">
           </div>
           <button id="batchRunBtn" class="btn primary">실행 요청</button>
         </div>
@@ -62,6 +66,22 @@
         </table>
       </div>
     </main>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">상세 정보</h3>
+        <button id="modalClose" class="btn icon">×</button>
+      </div>
+      <div id="modalBody" class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button id="modalCancel" class="btn">닫기</button>
+        <button id="modalSave" class="btn primary">확인</button>
+      </div>
+    </div>
   </div>
 
   <script src="/assets/app.js"></script>
