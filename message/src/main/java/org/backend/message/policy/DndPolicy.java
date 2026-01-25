@@ -21,13 +21,21 @@ public class DndPolicy{
 	
 	public boolean isDndNow(Message message) {
 		
-		BanTime dnd = banTimeRepository.findBanTimeByMessageId(message.getId()).orElseThrow(
-					() -> new IllegalArgumentException("BenTime not found : " + message.getId())
-				);
-		
-        LocalTime now = LocalTime.now();
-        
-        return now.isAfter(dnd.getStartTime()) || now.isBefore(dnd.getEndTime());
+		BanTime dnd = banTimeRepository.findBanTimeByMessageId(message.getId())
+	            .orElseThrow(() -> new IllegalArgumentException("BanTime not found : " + message.getId()));
+
+	    LocalTime now = LocalTime.now();
+	    LocalTime start = dnd.getStartTime();
+	    LocalTime end = dnd.getEndTime();
+
+	    if (start.isBefore(end)) {
+	        // 일반적인 케이스 (예: 09:00 ~ 18:00)
+	        return now.isAfter(start) && now.isBefore(end);
+	    } else {
+	        // 자정을 넘기는 케이스 (예: 22:00 ~ 08:00)
+	        // 현재 시간이 시작 이후이거나 종료 이전이면 DND임
+	        return now.isAfter(start) || now.isBefore(end);
+	    }
         
     }
 
