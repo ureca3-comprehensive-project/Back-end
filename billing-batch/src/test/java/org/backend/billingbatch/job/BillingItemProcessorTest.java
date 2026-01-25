@@ -14,7 +14,6 @@ import org.backend.billingbatch.component.DiscountCalculator;
 import org.backend.billingbatch.component.TotalFeeCalculator;
 import org.backend.billingbatch.dto.BillingResponse;
 import org.backend.billingbatch.dto.ContractInfo;
-import org.backend.billingbatch.repository.BillRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

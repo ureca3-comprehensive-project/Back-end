@@ -10,7 +10,6 @@ import org.backend.billingbatch.component.TotalFeeCalculator;
 import org.backend.billingbatch.dto.BillingResponse;
 import org.backend.billingbatch.dto.ContractInfo;
 import org.backend.billingbatch.dto.TotalFeeCalculatorRequest;
-import org.backend.billingbatch.repository.BillRepository;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,7 @@ public class BillingItemProcessor implements ItemProcessor<ContractInfo, Billing
 
     private final TotalFeeCalculator totalFeeCalculator;
     private final DiscountCalculator discountCalculator;
-    private final BillRepository billRepository;
+
 
 
     @Override

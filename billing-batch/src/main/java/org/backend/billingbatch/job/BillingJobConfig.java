@@ -24,20 +24,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
-public class BillingJobConfig extends DefaultBatchConfiguration {
+public class BillingJobConfig {
 
-//    private final JobRepository jobRepository;
-
+    private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
     private final DataSource dataSource;
 
 
-    protected DataSource getDataSource() {
-        return this.dataSource;
-    }
-    protected PlatformTransactionManager getTransactionManager() {
-        return this.transactionManager;
-    }
 
     private static final String BILLING_READER_QUERY =
                 """
