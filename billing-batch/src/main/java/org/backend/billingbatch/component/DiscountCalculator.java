@@ -16,7 +16,7 @@ public class DiscountCalculator {
 
         BigDecimal result = basePrice.subtract(rate.multiply(basePrice));
 
-        if ((discountLimit.compareTo(rate.multiply(basePrice)) > 0) & (basePrice.compareTo(discountLimit) >= 0)){
+        if ((discountLimit.compareTo(rate.multiply(basePrice)) <= 0) & (basePrice.compareTo(discountLimit) >= 0)){
             return basePrice.subtract(discountLimit);
         }
 

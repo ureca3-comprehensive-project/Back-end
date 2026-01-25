@@ -16,6 +16,9 @@ public class BillingResponse {
     private LocalDateTime userAt;
     private String billingMonth;
     private BigDecimal benefitAmount;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }
+
+

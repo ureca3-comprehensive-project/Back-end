@@ -44,11 +44,11 @@ public class BillingItemProcessor implements ItemProcessor<ContractInfo, Billing
         BigDecimal voiceAmount = totalFeeCalculator.totalFeeCalculate(voice_request);
         BigDecimal dataAmount = totalFeeCalculator.totalFeeCalculate(data_request);
 
-        BigDecimal discount = discountCalculator.discountCalculate(item.getDiscountRate(), item.getBase_price(),
+        BigDecimal discount = discountCalculator.discountCalculate(item.getRate(), item.getBase_price(),
                 item.getDiscountLimit());
 
         BigDecimal totalSum = voiceAmount.add(dataAmount).add(vasAmount).add(discount);
-        log.info("id = {} ",item.getLine_id());
+//        log.info("id = {} ",item.getLine_id());
 
         return new BillingResponse(
                 item.getLine_id(),
@@ -57,7 +57,9 @@ public class BillingItemProcessor implements ItemProcessor<ContractInfo, Billing
                 totalSum,
                 item.getStartDate(),
                 billingMonth,
-                discount
+                discount,
+                item.getStartDate(),
+                item.getStartDate()
         );
 
 

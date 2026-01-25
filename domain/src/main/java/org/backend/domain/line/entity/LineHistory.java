@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_line_history_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_history_plan_id", columnList = "plan_id")
         })
-public class LineHistory extends BaseEntity {
+public class LineHistory extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
