@@ -9,6 +9,8 @@ dependencies {
     implementation project(':domain')
 
     implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'org.springframework.batch:spring-batch-core'
     // kafka로 invoice 전송 테스트
@@ -17,7 +19,9 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'    
+    // 랜덤 이름 값
+    implementation 'net.datafaker:datafaker:2.0.2'
     testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
     testImplementation 'org.awaitility:awaitility:4.2.0'
     testImplementation 'org.springframework.kafka:spring-kafka-test' // kafka로 invoice 전송 테스트

@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "message",
+@Table(name = "Message",
         indexes = {
         		@Index(name = "idx_message_invoice_id", columnList = "invoice_id"),
 				@Index(name = "idx_message_status_createdat", columnList = "status, created_at")

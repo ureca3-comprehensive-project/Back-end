@@ -25,12 +25,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "usage_log",
+@Table(name = "UsageLog",
         indexes = {
                 @Index(name = "idx_usage_log_line_id", columnList = "line_id"),
                 @Index(name = "idx_usage_log_month", columnList = "log_month")
         })
-public class UsageLog extends BaseEntity {
+public class UsageLog{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

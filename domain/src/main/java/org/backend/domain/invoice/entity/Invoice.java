@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.*;
 import org.backend.domain.billing.entity.BillingHistory;
 import org.backend.domain.common.entity.BaseEntity;
 import org.backend.domain.invoice.type.InvoiceStatus;
@@ -25,14 +24,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "invoice",
+@Table(name = "Invoice",
         indexes = {
         		@Index(name = "idx_invoice_line_id", columnList = "line_id"),
         		@Index(name = "idx_invoice_billing_month", columnList = "billing_month"),
@@ -72,5 +75,6 @@ public class Invoice extends BaseEntity{
     public void addDetail(InvoiceDetail detail) {
         this.details.add(detail);
     }
+	
 
 }

@@ -18,11 +18,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "vas",
+@Table(name = "Vas",
         indexes = {
                 @Index(name = "idx_vas_name", columnList = "name")
         })
-public class Vas extends BaseEntity {
+public class Vas {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

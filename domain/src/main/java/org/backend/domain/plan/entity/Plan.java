@@ -20,8 +20,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "plan")
-public class Plan extends BaseEntity {
+@Table(name = "Plan")
+public class Plan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -22,12 +22,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "plan_item",
+@Table(name = "PlanItem",
         indexes = {
                 @Index(name = "idx_plan_item_plan_id", columnList = "plan_id"),
                 @Index(name = "idx_plan_item_type", columnList = "item_type")
         })
-public class PlanItem extends BaseEntity {
+public class PlanItem{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

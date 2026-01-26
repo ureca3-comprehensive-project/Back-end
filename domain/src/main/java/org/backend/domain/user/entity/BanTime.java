@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "ban_time",
+@Table(name = "BanTime",
 indexes = {
         @Index(name = "idx_bantime_user_id", columnList = "user_id")
 })
@@ -38,10 +38,10 @@ public class BanTime {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    @Column(nullable = false)
+    @Column(nullable = false, name = "start_time")
     private LocalTime startTime;
     
-    @Column(nullable = false)
+    @Column(nullable = false, name = "end_time")
     private LocalTime endTime;
 
     @Column(nullable = false)

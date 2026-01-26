@@ -20,12 +20,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "discount_policy")
-public class DiscountPolicy extends BaseEntity {
+@Table(name = "DiscountPolicy")
+public class DiscountPolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "policy_ids")
+    @Column(name = "policy_id")
     private Integer id;
 
     @Column(nullable = false, length = 100, name = "name")

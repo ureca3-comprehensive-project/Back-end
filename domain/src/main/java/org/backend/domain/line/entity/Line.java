@@ -2,7 +2,6 @@ package org.backend.domain.line.entity;
 
 import java.time.LocalDateTime;
 
-import lombok.*;
 import org.backend.domain.common.entity.BaseEntity;
 import org.backend.domain.line.type.LineStatus;
 import org.backend.domain.user.entity.BanTime;
@@ -20,20 +19,24 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "line",
+@Table(name = "Line",
         indexes = {
                 @Index(name = "idx_line_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_plan_id", columnList = "plan_id"),
                 @Index(name = "idx_line_due_date_id", columnList = "due_date_id")
         })
-public class Line extends BaseEntity {
+public class Line {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,6 +63,9 @@ public class Line extends BaseEntity {
 
     @Column(name = "end_date")
     private LocalDateTime endDate;
+    
+    @Column(name = "is_representative")
+    private boolean isRepresentative;
 
     @Column(name = "phone", nullable = false, unique = true)
     private String phone; // 암호화는 모듈에서 처리
