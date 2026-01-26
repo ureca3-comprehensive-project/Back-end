@@ -72,8 +72,11 @@ public class InvoiceJobConfig {
                 .reader(targetDateBillingReader(null, null))
                 .processor(invoiceProcessor)
 //                .writer(jdbcInvoiceWriter())
-                .writer(compositeJdbcWriter()) // invoiceDto 사용 버전
-//                .writer(compositeInvoiceWriter())
+//                .writer(compositeJdbcWriter()) // invoiceDto 사용 버전
+                .writer(compositeInvoiceWriter())
+                .faultTolerant()
+                .retryLimit(3)   // 최대 3번 재시도
+                .retry(org.springframework.dao.CannotAcquireLockException.class)
                 .taskExecutor(taskExecutor())
                 .listener(chunkListener())
                 .listener(writeListener())
@@ -143,17 +146,17 @@ public class InvoiceJobConfig {
         // 전부 정산되 가격이 amount로 올 경우
         provider.setSelectClause("SELECT b.billing_id, b.line_id, b.amount, b.billing_month");
 
-        provider.setFromClause("FROM BillingHistory b " +
-                "INNER JOIN Line l ON b.line_id = l.line_id " +
-                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
-
-        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
-        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
+//        provider.setFromClause("FROM BillingHistory b " +
+//                "INNER JOIN Line l ON b.line_id = l.line_id " +
+//                "INNER JOIN dueDate d ON l.due_date_id = d.due_date_id");
+//
+//        // 납부일이 일치하고, 청구월이 일치하는 데이터만 추출
+//        provider.setWhereClause("WHERE b.billing_month = :billingMonth AND d.date = :targetDay");
 
         // 조인 연산에서 시간을 잡아먹는지, DB 서버 설정이나 I/O 병목현상인지 확인을 위해 작성 => 1397.591 초(23분), 893.96 초당 처리량
         // 125만건 => 1시간 3분 소요
-//        provider.setFromClause("FROM BillingHistory b");
-//        provider.setWhereClause("WHERE b.billing_month = :billingMonth");
+        provider.setFromClause("FROM BillingHistory b JOIN line l ON b.line_id = l.line_id");
+        provider.setWhereClause("WHERE b.billing_month = :billingMonth");
 
         provider.setSortKeys(Collections.singletonMap("b.billing_id", Order.ASCENDING));
 
@@ -181,7 +184,7 @@ public class InvoiceJobConfig {
     public JdbcBatchItemWriter<Invoice> jdbcInvoiceWriter() {
         return new JdbcBatchItemWriterBuilder<Invoice>()
                 .dataSource(dataSource)
-                .sql("INSERT INTO Invoice (line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
+                .sql("INSERT INTO invoice (line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
                         "VALUES (:lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, :createdAt)")
                 // status enum이어서 .beanMapped()에서 변경
                 .itemSqlParameterSourceProvider(item -> {
@@ -210,8 +213,8 @@ public class InvoiceJobConfig {
     public JdbcBatchItemWriter<InvoiceDto> invoiceInsertWriter() {
         return new JdbcBatchItemWriterBuilder<InvoiceDto>()
                 .dataSource(dataSource)
-                .sql("INSERT INTO Invoice (invoice_id, line_id, billing_id, billing_month, total_amount, status, due_date, created_at) " +
-                        "VALUES (:invoiceId, :lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, NOW())")
+                .sql("INSERT INTO invoice (invoice_id, line_id, billing_id, billing_month, total_amount, status, due_date, created_at, updated_at) " +
+                        "VALUES (:invoiceId, :lineId, :billingId, :billingMonth, :totalAmount, :status, :dueDate, NOW(), NOW())")
                 .beanMapped()
                 .build();
     }
@@ -220,7 +223,7 @@ public class InvoiceJobConfig {
     public JdbcBatchItemWriter<InvoiceDto> invoiceDetailInsertWriter() {
         return new JdbcBatchItemWriterBuilder<InvoiceDto>()
                 .dataSource(dataSource)
-                .sql("INSERT INTO InvoiceDetail (invoice_detail_id, invoice_id, billing_type, amount, status) " +
+                .sql("INSERT INTO invoice_details (invoice_detail_id, invoice_id, billing_type, amount, status) " +
                         "VALUES (:detailId, :invoiceId, :billingType, :detailAmount, :detailStatus)")
                 .beanMapped()
                 .build();
@@ -242,8 +245,8 @@ public class InvoiceJobConfig {
     @Bean
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(8); // 본인 PC CPU 코어 수에 맞게 설정, yml도 수정 필요
-        executor.setMaxPoolSize(16);
+        executor.setCorePoolSize(4); // 본인 PC CPU 코어 수에 맞게 설정, yml도 수정 필요 - 데드락으로 약간 낮게 조정
+        executor.setMaxPoolSize(8);
         executor.setQueueCapacity(500); // 대기 큐
         executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy()); // 큐가 꽉 차면 호출한 스레드가 직접 처리하게 하여 데이터 유실 방지
         executor.initialize();
@@ -299,7 +302,7 @@ public class InvoiceJobConfig {
 //        };
 //    }
     @Bean
-    public ItemWriteListener<InvoiceDto> writeListener() { // 👈 Invoice -> InvoiceDto
+    public ItemWriteListener<InvoiceDto> writeListener() { // Invoice -> InvoiceDto
         return new ItemWriteListener<InvoiceDto>() {
             @Override
             public void afterWrite(Chunk<? extends InvoiceDto> items) {
