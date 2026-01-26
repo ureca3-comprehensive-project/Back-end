@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "LineDiscount",
         indexes = {
-                @Index(name = "idx_line_discount_user_id", columnList = "user_id"),
+//                @Index(name = "idx_line_discount_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_discount_discount_id", columnList = "discount_id")
         })
 public class LineDiscount {
@@ -33,4 +33,6 @@ public class LineDiscount {
 
     @Column(name = "policy_id")
     private Integer policyId;
+
+
 }

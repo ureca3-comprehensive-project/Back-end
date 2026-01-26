@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record InvoiceDto (
-    String invoiceId,    // Invoice PK
-    String detailId,
+    Long invoiceId,    // Invoice PK
+    Long detailId,
     Long lineId,
     Long billingId,
     String billingMonth,

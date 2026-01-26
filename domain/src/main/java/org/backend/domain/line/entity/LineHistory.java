@@ -2,8 +2,6 @@ package org.backend.domain.line.entity;
 
 import java.time.LocalDate;
 
-import org.backend.domain.common.entity.BaseEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

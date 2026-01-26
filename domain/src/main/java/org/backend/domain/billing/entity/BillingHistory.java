@@ -3,6 +3,8 @@ package org.backend.domain.billing.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.*;
+import org.backend.domain.common.entity.BaseEntity;
 import org.backend.domain.line.entity.Line;
 import org.backend.domain.plan.entity.Plan;
 
@@ -31,7 +33,7 @@ import lombok.NoArgsConstructor;
         indexes = {
         		@Index(name = "idx_billing_history_line_id", columnList = "line_id"),
         })
-public class BillingHistory {
+public class BillingHistory extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
