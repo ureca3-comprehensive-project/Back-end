@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.*;
+import org.backend.domain.common.entity.BaseEntity;
 import org.backend.domain.line.entity.Line;
 
 import jakarta.persistence.Column;
@@ -27,7 +28,7 @@ import jakarta.persistence.Table;
         indexes = {
         		@Index(name = "idx_billing_history_line_id", columnList = "line_id"),
         })
-public class BillingHistory {
+public class BillingHistory extends BaseEntity {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +42,7 @@ public class BillingHistory {
     @Column(name = "plan_id", nullable = false)
     private Long planId;
 	
-	@Column(nullable = false, name = "usage")
+	@Column(nullable = false, name = "usage_amount")
 	private int usage;
 	
 	@Column(precision = 20, scale = 2 , nullable = false, name = "amount")

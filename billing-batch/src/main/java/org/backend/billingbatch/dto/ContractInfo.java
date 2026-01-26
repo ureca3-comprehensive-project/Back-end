@@ -19,7 +19,7 @@ public class ContractInfo {
     private BigDecimal dataLimit;
     private BigDecimal dataUnitPrice;
 
-    private BigDecimal discountRate;
+    private BigDecimal rate;
     private BigDecimal discountLimit;
 
     private BigDecimal voice_usage;

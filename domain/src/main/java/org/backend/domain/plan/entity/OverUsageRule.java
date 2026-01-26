@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
         indexes = {
                 @Index(name = "idx_over_usage_rule_item_id", columnList = "item_id")
         })
-public class OverUsageRule extends BaseEntity {
+public class OverUsageRule extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

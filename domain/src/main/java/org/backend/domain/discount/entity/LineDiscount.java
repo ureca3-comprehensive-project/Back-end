@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "user_discount",
+@Table(name = "LineDiscount",
         indexes = {
-                @Index(name = "idx_line_discount_user_id", columnList = "user_id"),
+//                @Index(name = "idx_line_discount_user_id", columnList = "user_id"),
                 @Index(name = "idx_line_discount_discount_id", columnList = "discount_id")
         })
 public class LineDiscount extends BaseEntity {
@@ -33,4 +33,6 @@ public class LineDiscount extends BaseEntity {
 
     @Column(name = "discount_id")
     private Integer policyId;
+
+
 }
