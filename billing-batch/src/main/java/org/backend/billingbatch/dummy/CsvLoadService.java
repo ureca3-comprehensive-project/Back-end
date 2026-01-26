@@ -24,8 +24,26 @@ public class CsvLoadService {
     }
 	
     public void loadUser() {
-    	log.info("[Start Insert - User.csv]");
-        load("/var/lib/mysql-files/User.csv", "users");
+    	log.info("[Start Insert - Users.csv]");
+//    	load("/var/lib/mysql-files/User.csv", "users");
+    	String sql = """
+			LOAD DATA INFILE '/var/lib/mysql-files/Users.csv'
+			INTO TABLE users
+			FIELDS TERMINATED BY ','
+			OPTIONALLY ENCLOSED BY '"'
+			LINES TERMINATED BY '\n'
+			IGNORE 1 ROWS
+			(
+			  user_id,
+			  created_at,
+			  updated_at,
+			  email,
+			  name,
+			  status
+			)
+    		""";
+
+    			jdbc.execute(sql);
     }
     
     public void loadBanTime() {
